@@ -77,7 +77,7 @@ public class DatabaseLoader {
     }
 
     public List<DatasourceModel> loadDatasourceModels() throws IOException {
-        final Path pathOfResource = PathHelper.getPathOfResource("config/db.yml");
+        final Path pathOfResource = PathHelper.getPathOfResource("config/db.example.yml");
         try (final InputStream fis = Files.newInputStream(pathOfResource)) {
             final List<?> databaseRawList = new YamlReader(fis).getProperty("databases", List.class);
 
