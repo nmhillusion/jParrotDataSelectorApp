@@ -1,0 +1,15 @@
+databases:
+  - name: mMySQL
+    jdbcUrl: "jdbc:mysql://localhost:3306/common_database"
+    username: "root"
+    password: ""
+
+  - name: mAIS
+    jdbcUrl: "jdbc:oracle://localhost:1521/xe"
+    username: "system"
+    password: ""
+
+  - name: mAMS
+    jdbcUrl: "jdbc:oracle://localhost:1521/xe"
+    username: "ams"
+    password: ""

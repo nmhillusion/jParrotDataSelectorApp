@@ -6,6 +6,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.SqlEditor;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 
 /**
  * created by: nmhillusion
@@ -13,14 +14,14 @@ import java.awt.*;
  * created date: 2025-05-10
  */
 public class MainFrame extends JPanel {
-    public MainFrame() {
+    public MainFrame() throws IOException {
         setLayout(new GridBagLayout());
 //        setBackground(Color.CYAN);
 
         initComponents();
     }
 
-    private void initComponents() {
+    private void initComponents() throws IOException {
         int rowIdx = 0;
 
         final Insets defaultInsets = new Insets(2, 5, 2, 5);

@@ -1,7 +1,7 @@
 package tech.nmhillusion.jParrotDataSelectorApp;
 
 import org.hibernate.SessionFactory;
-import tech.nmhillusion.jParrotDataSelectorApp.config.DatabaseConfig;
+import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.MainFrame;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseHelper;
@@ -44,7 +44,7 @@ public class Main {
             try {
                 makeGUI();
 
-                testDb();
+//                testDb();
             } catch (IOException ex) {
                 exitAppOnError(ex);
             }
@@ -52,7 +52,7 @@ public class Main {
     }
 
     private static void testDb() {
-        DatabaseConfig dbc = new DatabaseConfig();
+        DatabaseLoader dbc = new DatabaseLoader();
         try (final SessionFactory sessionFactory = dbc.generateDbSession()) {
             final DataSource dataSource = dbc.generateDataSource();
             final DatabaseHelper databaseHelper = new DatabaseHelper(dataSource, sessionFactory);
