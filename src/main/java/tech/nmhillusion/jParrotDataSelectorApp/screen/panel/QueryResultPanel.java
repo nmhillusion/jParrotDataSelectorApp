@@ -1,25 +1,34 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 
+import org.apache.poi.ss.usermodel.*;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.n2mix.exception.MissingDataException;
 import tech.nmhillusion.n2mix.helper.YamlReader;
-import tech.nmhillusion.n2mix.helper.log.LogHelper;
+import tech.nmhillusion.n2mix.helper.office.excel.writer.ExcelDataSheet;
 import tech.nmhillusion.n2mix.helper.office.excel.writer.ExcelWriteHelper;
 import tech.nmhillusion.n2mix.helper.office.excel.writer.model.BasicExcelDataModel;
+import tech.nmhillusion.n2mix.helper.storage.FileHelper;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
+import tech.nmhillusion.n2mix.util.DateUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.Font;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
+
+import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 
 /**
  * created by: nmhillusion
@@ -60,6 +69,7 @@ public class QueryResultPanel extends JPanel {
             try {
                 exportResultToExcel();
             } catch (IOException | MissingDataException ex) {
+                getLogger(this).error(ex);
                 JOptionPane.showMessageDialog(null
                         , "Error when exporting data: " + ex.getMessage()
                         , "Error"
@@ -132,7 +142,11 @@ public class QueryResultPanel extends JPanel {
         final StringBuilder sb = new StringBuilder();
 
         sb.append(
-                MessageFormat.format("<pre class='language-sql'><code>{0};</code></pre>", queryResultModel.sqlText())
+                MessageFormat.format(
+                        "<pre class='language-sql'><code>{0}</code></pre>"
+                        , queryResultModel.sqlText()
+                                .replace('\n', ' ')
+                )
         );
 
         final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
@@ -181,6 +195,18 @@ public class QueryResultPanel extends JPanel {
         cachedQueryResultList = queryResultList;
     }
 
+    private void prepareOutputFolder() throws IOException {
+        if (!Files.exists(outputPath)) {
+            Files.createDirectories(outputPath);
+        }
+
+        try (final Stream<Path> filelist = Files.list(outputPath)) {
+            filelist.forEach(it -> {
+                FileHelper.recursiveDeleteFolder(it.toFile());
+            });
+        }
+    }
+
     private void exportResultToExcel() throws IOException, MissingDataException {
         if (null == cachedQueryResultList || cachedQueryResultList.isEmpty()) {
             JOptionPane.showMessageDialog(
@@ -191,12 +217,16 @@ public class QueryResultPanel extends JPanel {
             );
         }
 
-        final int tabSize = cachedQueryResultList.size();
-        for (int tabIdx = 0; tabIdx < tabSize; tabIdx++) {
-            final QueryResultModel queryResultModel = cachedQueryResultList.get(tabIdx);
+        prepareOutputFolder();
+
+        final int queryListSize = cachedQueryResultList.size();
+        final String queryId = DateUtil.format(Date.from(Instant.now()), "yyyy-MM-dd_HH-mm");
+
+        for (int queryIdx = 0; queryIdx < queryListSize; queryIdx++) {
+            final QueryResultModel queryResultModel = cachedQueryResultList.get(queryIdx);
             final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
 
-            final byte[] tabData = new ExcelWriteHelper()
+            final byte[] queryData = new ExcelWriteHelper()
                     .addSheetData(
                             new BasicExcelDataModel()
                                     .setHeaders(
@@ -209,10 +239,33 @@ public class QueryResultPanel extends JPanel {
                                     )
                                     .setSheetName("Data")
                     )
+                    .addSheetData(
+                            new BasicExcelDataModel()
+                                    .setHeaders(
+                                            List.of(
+                                                    List.of("SQL")
+                                            )
+                                    )
+                                    .setBodyData(
+                                            List.of(
+                                                    List.of(queryResultModel.sqlText())
+                                            )
+                                    )
+                                    .setSheetName("SQL")
+                            , (self, dataSheet, workbookRef, sheetRef) -> {
+                                this.formatForSqlSheet(
+                                        queryResultModel.sqlText()
+                                        , self
+                                        , dataSheet
+                                        , workbookRef
+                                        , sheetRef
+                                );
+                            }
+                    )
                     .build();
 
-            final Path savePath = saveTabData(tabIdx, tabData);
-            LogHelper.getLogger(this).info(
+            final Path savePath = saveTabData(queryId, queryIdx, queryData);
+            getLogger(this).info(
                     "saved path: {}", savePath
             );
         }
@@ -227,11 +280,37 @@ public class QueryResultPanel extends JPanel {
         ViewHelper.openFileExplorer(outputPath);
     }
 
-    private Path saveTabData(int tabIdx, byte[] tabData) throws IOException {
-        final Path fileOutputPath = Path.of(String.valueOf(outputPath), "tab-" + tabIdx + ".xlsx");
+    private void formatForSqlSheet(String sqlText, ExcelWriteHelper self, ExcelDataSheet dataSheet, Workbook workbookRef, Sheet sheetRef) {
+        final int columnIdxToFormat = 0;
+
+        final Row row = sheetRef.getRow(1);
+        if (null == row) {
+            throw new IllegalStateException("Row not found");
+        }
+
+        final Cell sqlQueryCell = row.getCell(columnIdxToFormat);
+        if (null == sqlQueryCell) {
+            throw new IllegalStateException("Cell not found");
+        }
+
+        final int lineCount = sqlText.split("\n").length + 1;
+        row.setHeightInPoints(sheetRef.getDefaultRowHeightInPoints() * lineCount);
+
+        final CellStyle style = workbookRef.createCellStyle();
+        style.setWrapText(true);
+        sqlQueryCell.setCellStyle(style);
+        sheetRef.autoSizeColumn(columnIdxToFormat);
+    }
+
+    private Path saveTabData(String queryId, int queryIdx, byte[] queryData) throws IOException {
+        final Path fileOutputPath = Path.of(String.valueOf(outputPath), "query-" + queryId + "--" + (queryIdx + 1) + ".xlsx");
+
+        if (Files.exists(fileOutputPath)) {
+            Files.delete(fileOutputPath);
+        }
 
         try (final OutputStream fos = Files.newOutputStream(fileOutputPath)) {
-            fos.write(tabData);
+            fos.write(queryData);
             fos.flush();
             return fileOutputPath;
         }

@@ -117,7 +117,7 @@ public class MainFrame extends JPanel {
         java.util.List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
                         sqlTextAll
                 ).split(";"))
-                .map(String::trim)
+                .map(it -> StringUtil.trimWithNull(it) + ";")
                 .filter(Predicate.not(StringValidator::isBlank))
                 .toList();
 
