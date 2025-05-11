@@ -3,9 +3,12 @@ package tech.nmhillusion.jParrotDataSelectorApp.loader;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.n2mix.constant.CommonConfigDataSourceValue;
+import tech.nmhillusion.n2mix.exception.InvalidArgument;
 import tech.nmhillusion.n2mix.helper.YamlReader;
 import tech.nmhillusion.n2mix.helper.database.config.DataSourceProperties;
 import tech.nmhillusion.n2mix.helper.database.config.DatabaseConfigHelper;
+import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
+import tech.nmhillusion.n2mix.helper.database.query.DatabaseHelper;
 import tech.nmhillusion.n2mix.helper.log.LogHelper;
 
 import javax.sql.DataSource;
@@ -48,29 +51,34 @@ public class DatabaseLoader {
         };
     }
 
-    public DataSource generateDataSource() {
-        final DataSourceProperties dataSourceProperties = DataSourceProperties.generateFromDefaultDataSourceProperties(
-                "default_"
-                , CommonConfigDataSourceValue.MYSQL_DATA_SOURCE_CONFIG
-                , "jdbc:mysql://localhost:3306/common_database"
-                , "root"
-                , ""
-        );
-
+    public DataSource generateDataSource(DataSourceProperties dataSourceProperties) {
         return DatabaseConfigHelper.INSTANCE.generateDataSource(
                 dataSourceProperties
         );
     }
 
-    public org.hibernate.SessionFactory generateDbSession() throws IOException {
+    public DatabaseExecutor prepareDatabaseExecutor(DatasourceModel datasourceModel) throws IOException, InvalidArgument {
         final DataSourceProperties dataSourceProperties = DataSourceProperties.generateFromDefaultDataSourceProperties(
-                "default_"
-                , CommonConfigDataSourceValue.MYSQL_DATA_SOURCE_CONFIG
-                , "jdbc:mysql://localhost:3306/common_database"
-                , "root"
-                , ""
+                datasourceModel.getDataSourceName()
+                , datasourceModel.getDataSourceConfig()
+                , datasourceModel.getJdbcUrl()
+                , datasourceModel.getUsername()
+                , datasourceModel.getPassword()
         );
 
+        final DataSource dataSource = generateDataSource(
+                dataSourceProperties
+        );
+
+        final org.hibernate.SessionFactory sessionFactory = generateDbSession(
+                dataSourceProperties
+        );
+
+        final DatabaseHelper databaseHelper = new DatabaseHelper(dataSource, sessionFactory);
+        return databaseHelper.getExecutor();
+    }
+
+    public org.hibernate.SessionFactory generateDbSession(DataSourceProperties dataSourceProperties) throws IOException {
         return DatabaseConfigHelper.INSTANCE.generateSessionFactory(
                 dataSourceProperties
         );

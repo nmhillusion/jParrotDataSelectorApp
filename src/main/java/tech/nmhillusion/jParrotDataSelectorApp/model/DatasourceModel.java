@@ -59,4 +59,9 @@ public class DatasourceModel extends Stringeable {
         this.password = password;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return dataSourceName;
+    }
 }

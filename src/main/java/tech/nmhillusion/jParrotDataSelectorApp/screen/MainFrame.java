@@ -1,12 +1,23 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen;
 
+import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
+import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.HeaderPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.QueryResultPanel;
-import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.SqlEditor;
+import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.SqlEditorPanel;
+import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
+import tech.nmhillusion.n2mix.helper.database.query.ExtractResultToPage;
+import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.util.Map;
+import java.util.TreeMap;
+
+import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 
 /**
  * created by: nmhillusion
@@ -14,6 +25,13 @@ import java.io.IOException;
  * created date: 2025-05-10
  */
 public class MainFrame extends JPanel {
+    private final ExecutionState executionState = new ExecutionState();
+    private final HeaderPanel headerPanel = new HeaderPanel(executionState);
+    private final SqlEditorPanel sqlEditorPanel = new SqlEditorPanel(executionState);
+    private final QueryResultPanel queryResultPanel = new QueryResultPanel(executionState);
+    private final DatabaseLoader databaseLoader = new DatabaseLoader();
+    private final Map<String, DatabaseExecutor> datasourceExecutorMap = new TreeMap<>();
+
     public MainFrame() throws IOException {
         setLayout(new GridBagLayout());
 //        setBackground(Color.CYAN);
@@ -38,7 +56,7 @@ public class MainFrame extends JPanel {
         gbc.insets = defaultInsets;
 
         add(
-                new HeaderPanel(), gbc
+                headerPanel, gbc
         );
 
         gbc.gridy = rowIdx++;
@@ -48,7 +66,7 @@ public class MainFrame extends JPanel {
 
         gbc.gridy = rowIdx++;
         add(
-                new SqlEditor(), gbc
+                sqlEditorPanel, gbc
         );
 
         gbc.gridy = rowIdx++;
@@ -62,6 +80,13 @@ public class MainFrame extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         final JButton btnExec = new JButton("Execute");
         btnExec.setPreferredSize(new Dimension(200, 30));
+        btnExec.addActionListener(e -> {
+            try {
+                onClickExecSql();
+            } catch (Throwable ex) {
+                throw new RuntimeException(ex);
+            }
+        });
         add(
                 btnExec, gbc
         );
@@ -75,7 +100,35 @@ public class MainFrame extends JPanel {
         gbc.weighty = 1;
         gbc.fill = GridBagConstraints.BOTH;
         add(
-                new QueryResultPanel(), gbc
+                queryResultPanel, gbc
         );
+    }
+
+    private void onClickExecSql() throws Throwable {
+        final String sqlText = sqlEditorPanel.getSqlText();
+        getLogger(this).info("exec for sql: {}", sqlText);
+
+        getLogger(this).info("exec state: {}", executionState);
+
+        final DatasourceModel datasourceModel = executionState.getDatasourceModel();
+
+        final DatabaseExecutor databaseExecutor = datasourceExecutorMap.computeIfAbsent(datasourceModel.getDataSourceName()
+                , datasourceName -> {
+                    try {
+                        return databaseLoader.prepareDatabaseExecutor(datasourceModel);
+                    } catch (Throwable e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
+                conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {
+                    final ResultSet resultSet = preparedStatement_.executeQuery();
+
+                    return ExtractResultToPage.buildDbExportDataModel(resultSet);
+                }));
+
+        getLogger(this).info("exec result :: header = {}", dbExportDataModel.getHeader());
+        getLogger(this).info("exec result :: body = {}", dbExportDataModel.getValues());
     }
 }

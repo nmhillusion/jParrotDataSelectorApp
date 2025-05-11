@@ -1,19 +1,10 @@
 package tech.nmhillusion.jParrotDataSelectorApp;
 
-import org.hibernate.SessionFactory;
-import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.MainFrame;
-import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
-import tech.nmhillusion.n2mix.helper.database.query.DatabaseHelper;
-import tech.nmhillusion.n2mix.helper.log.LogHelper;
-import tech.nmhillusion.n2mix.type.ChainMap;
 
-import javax.sql.DataSource;
 import javax.swing.*;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.sql.ResultSet;
-import java.sql.Timestamp;
 
 import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 
@@ -43,43 +34,10 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             try {
                 makeGUI();
-
-//                testDb();
             } catch (IOException ex) {
                 exitAppOnError(ex);
             }
         });
-    }
-
-    private static void testDb() {
-        DatabaseLoader dbc = new DatabaseLoader();
-        try (final SessionFactory sessionFactory = dbc.generateDbSession()) {
-            final DataSource dataSource = dbc.generateDataSource();
-            final DatabaseHelper databaseHelper = new DatabaseHelper(dataSource, sessionFactory);
-            final DatabaseExecutor executor = databaseHelper.getExecutor();
-
-            executor.doWork(conn -> {
-                conn.doPreparedStatement(" select * from t_user ", preparedStatement_ -> {
-                    final ResultSet resultSet = preparedStatement_.executeQuery();
-
-                    while (resultSet.next()) {
-                        final String username = resultSet.getString("username");
-                        final String fullName = resultSet.getString("full_name");
-                        final boolean enabled = resultSet.getBoolean("enabled");
-                        final Timestamp createdDate = resultSet.getTimestamp("created_date");
-                        LogHelper.getLogger(Main.class).info(
-                                new ChainMap<String, Object>()
-                                        .chainPut("username", username)
-                                        .chainPut("fullName", fullName)
-                                        .chainPut("enabled", enabled)
-                                        .chainPut("createdDate", createdDate)
-                        );
-                    }
-                });
-            });
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private static void setLookAndFeelUI() {

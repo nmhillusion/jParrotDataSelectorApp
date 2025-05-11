@@ -1,5 +1,7 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 
+import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -9,7 +11,11 @@ import java.awt.*;
  * created date: 2025-05-10
  */
 public class QueryResultPanel extends JPanel {
-    public QueryResultPanel() {
+    private final ExecutionState executionState;
+
+    public QueryResultPanel(ExecutionState executionState) {
+        this.executionState = executionState;
+
 //        setBackground(Color.green);
         setLayout(new GridBagLayout());
 
