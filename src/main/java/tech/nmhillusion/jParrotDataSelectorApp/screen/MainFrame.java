@@ -112,6 +112,12 @@ public class MainFrame extends JPanel {
 
         final DatasourceModel datasourceModel = executionState.getDatasourceModel();
 
+        getLogger(this).info("exec datasource: {}", datasourceModel);
+
+        if (null == datasourceModel) {
+            throw new IllegalStateException("Not found datasource");
+        }
+
         final DatabaseExecutor databaseExecutor = datasourceExecutorMap.computeIfAbsent(datasourceModel.getDataSourceName()
                 , datasourceName -> {
                     try {
@@ -130,5 +136,7 @@ public class MainFrame extends JPanel {
 
         getLogger(this).info("exec result :: header = {}", dbExportDataModel.getHeader());
         getLogger(this).info("exec result :: body = {}", dbExportDataModel.getValues());
+
+        queryResultPanel.showResult(sqlText, dbExportDataModel);
     }
 }

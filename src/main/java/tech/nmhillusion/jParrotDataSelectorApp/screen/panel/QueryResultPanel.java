@@ -1,9 +1,11 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.MessageFormat;
 
 /**
  * created by: nmhillusion
@@ -12,6 +14,7 @@ import java.awt.*;
  */
 public class QueryResultPanel extends JPanel {
     private final ExecutionState executionState;
+    private final JEditorPane resultTextArea = new JEditorPane();
 
     public QueryResultPanel(ExecutionState executionState) {
         this.executionState = executionState;
@@ -37,17 +40,18 @@ public class QueryResultPanel extends JPanel {
         final JPanel resultActionBox = new JPanel();
         resultActionBox.setLayout(new BorderLayout());
 //        resultActionBox.setBackground(Color.green);
+        final JButton btnCopy = new JButton("Copy");
         resultActionBox.add(
-                new JButton("Copy"), BorderLayout.EAST
+                btnCopy, BorderLayout.EAST
         );
+        btnCopy.addActionListener(e -> copyResultToClipboard());
         add(
                 resultActionBox, gbc
         );
 
-
-        final JTextArea resultTextArea = new JTextArea();
         resultTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
-        resultTextArea.setText("Result will be shown here");
+        resultTextArea.setEditable(false);
+        resultTextArea.setContentType("text/html");
 
         gbc.gridy = rowIdx++;
         gbc.weighty = 1;
@@ -57,4 +61,45 @@ public class QueryResultPanel extends JPanel {
         );
     }
 
+    private void copyResultToClipboard() {
+        resultTextArea.select(0, resultTextArea.getText().length());
+        resultTextArea.copy();
+
+        JOptionPane.showMessageDialog(
+                null
+                , "Result copied to clipboard"
+                , "Success"
+                , JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+    public void showResult(String sqlText, DbExportDataModel dbExportDataModel) {
+
+        final StringBuilder sb = new StringBuilder();
+
+        sb.append("<table><thead>");
+        final String headerRow = String.join("", dbExportDataModel
+                .getHeader()
+                .stream()
+                .map(it -> "<th border='1'>" + it + "</th>")
+                .toList()
+        );
+
+        sb.append(headerRow).append("</thead><tbody>");
+
+        for (final java.util.List<String> row : dbExportDataModel.getValues()) {
+            sb.append("<tr>");
+            sb.append(String.join("", row.stream()
+                    .map(it -> "<td border='1'>" + it + "</td>")
+                    .toList())
+            );
+            sb.append("</tr>");
+        }
+
+        sb.append("</tbody></table>");
+
+        resultTextArea.setText(
+                MessageFormat.format("<pre class='language-sql'><code>{0}</code></pre>{1}", sqlText, sb.toString())
+        );
+    }
 }
