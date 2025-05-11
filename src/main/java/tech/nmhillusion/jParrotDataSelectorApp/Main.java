@@ -1,11 +1,15 @@
 package tech.nmhillusion.jParrotDataSelectorApp;
 
+import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.MainFrame;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 
 import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 
@@ -58,7 +62,7 @@ public class Main {
         frame.setSize(1000, 860);
         frame.setTitle(APP_NAME);
         frame.setLocationByPlatform(true);
-//        setIconForApp(frame);
+        setIconForApp(frame);
 
         executionState.addListener(() -> {
             if (null == executionState.getDatasourceModel()) {
@@ -84,17 +88,17 @@ public class Main {
         frame.setVisible(true);
     }
 
-//    private static void setIconForApp(JFrame frame) throws IOException {
-//        try (final InputStream icStream = Files.newInputStream(PathHelper.getPathOfResource("icon/app-icon.png"))) {
-//            if (null == icStream) {
-//                throw new IOException("App icon not found");
-//            }
-//
-//            frame.setIconImage(
-//                    ImageIO.read(icStream)
-//            );
-//        }
-//    }
+    private static void setIconForApp(JFrame frame) throws IOException {
+        try (final InputStream icStream = Files.newInputStream(PathHelper.getPathOfResource("icon/app-icon.png"))) {
+            if (null == icStream) {
+                throw new IOException("App icon not found");
+            }
+
+            frame.setIconImage(
+                    ImageIO.read(icStream)
+            );
+        }
+    }
 
     private static void exitAppOnError(Throwable ex) {
         getLogger(Main.class).error(ex);

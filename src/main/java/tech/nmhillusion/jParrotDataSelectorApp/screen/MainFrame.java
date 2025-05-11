@@ -143,7 +143,7 @@ public class MainFrame extends JPanel {
                     }
                 });
 
-        List<QueryResultModel> queryResultList = new ArrayList<>();
+        final List<QueryResultModel> queryResultList = new ArrayList<>();
         for (final String sqlText : sqlBlockList) {
             final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
                     conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {
