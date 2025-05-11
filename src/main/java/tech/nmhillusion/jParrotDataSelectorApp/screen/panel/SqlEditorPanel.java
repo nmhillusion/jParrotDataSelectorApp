@@ -22,11 +22,15 @@ public class SqlEditorPanel extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout());
 
+        add(
+                new JLabel("SQL:"), BorderLayout.NORTH
+        );
+
         this.sqlTextArea = new JTextArea();
         sqlTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         sqlTextArea.setText("SELECT * FROM t_user;");
         sqlTextArea.setLineWrap(false);
-        sqlTextArea.setRows(20);
+        sqlTextArea.setRows(18);
 
         add(
                 new JScrollPane(sqlTextArea), BorderLayout.CENTER

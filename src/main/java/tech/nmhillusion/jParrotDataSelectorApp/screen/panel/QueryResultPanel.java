@@ -50,6 +50,15 @@ public class QueryResultPanel extends JPanel {
                 resultActionBox, gbc
         );
 
+        gbc.gridy = rowIdx++;
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        add(
+                new JLabel("Result:"), gbc
+        );
+
         resultTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         resultTextArea.setEditable(false);
         resultTextArea.setContentType("text/html");
@@ -87,7 +96,7 @@ public class QueryResultPanel extends JPanel {
         final String headerRow = String.join("", dbExportDataModel
                 .getHeader()
                 .stream()
-                .map(it -> "<th border='1'>" + it + "</th>")
+                .map(it -> "<th style='border: solid 1px #eee;'>" + it + "</th>")
                 .toList()
         );
 
@@ -96,7 +105,7 @@ public class QueryResultPanel extends JPanel {
         for (final java.util.List<String> row : dbExportDataModel.getValues()) {
             sb.append("<tr>");
             sb.append(String.join("", row.stream()
-                    .map(it -> "<td border='1'>" + it + "</td>")
+                    .map(it -> "<td style='border: solid 1px #eee;'>" + it + "</td>")
                     .toList())
             );
             sb.append("</tr>");
@@ -111,6 +120,22 @@ public class QueryResultPanel extends JPanel {
         final StringBuilder sb = new StringBuilder(
                 MessageFormat.format("Query result of {0} queries.<hr><br>", queryResultList.size())
         );
+
+//        sb.append("""
+//                <style type='text/css'>
+//                    pre {
+//                        white-space: pre-wrap;
+//                        border: solid 1px #eee;
+//                    }
+//
+//                    table, table td, table th {
+//                        border-collapse: collapse;
+//                    }
+//                    table td,table th {
+//                        border: solid 1px #999;
+//                    }
+//                </style>
+//                """);
 
         queryResultList.stream()
                 .map(this::showEachResult)
