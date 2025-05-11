@@ -1,12 +1,19 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 
+import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.n2mix.helper.YamlReader;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.List;
 
 /**
  * created by: nmhillusion
@@ -16,14 +23,23 @@ import java.text.MessageFormat;
 public class QueryResultPanel extends JPanel {
     private final ExecutionState executionState;
     private final JEditorPane resultTextArea = new JEditorPane();
+    private final int maxRows;
 
-    public QueryResultPanel(ExecutionState executionState) {
+    public QueryResultPanel(ExecutionState executionState) throws IOException {
         this.executionState = executionState;
+        maxRows = getConfig("showResult.maxRows", Integer.class);
 
 //        setBackground(Color.green);
         setLayout(new GridBagLayout());
 
         initComponents();
+    }
+
+    private <T> T getConfig(String configKey, Class<T> clazz2Cast) throws IOException {
+        final Path configPath = PathHelper.getPathOfResource("config/app.config.yml");
+        try (final InputStream fis = Files.newInputStream(configPath)) {
+            return new YamlReader(fis).getProperty(configKey, clazz2Cast);
+        }
     }
 
     private void initComponents() {
@@ -91,7 +107,11 @@ public class QueryResultPanel extends JPanel {
         );
 
         final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
+        final List<List<String>> allRows = dbExportDataModel.getValues();
 
+        if (maxRows < allRows.size()) {
+            sb.append("<p><i>(Only show first ").append(maxRows).append(" rows)</i></p>");
+        }
         sb.append("<table><thead>");
         final String headerRow = String.join("", dbExportDataModel
                 .getHeader()
@@ -102,7 +122,9 @@ public class QueryResultPanel extends JPanel {
 
         sb.append(headerRow).append("</thead><tbody>");
 
-        for (final java.util.List<String> row : dbExportDataModel.getValues()) {
+        final List<List<String>> shownRows = allRows.subList(0, Math.min(maxRows, allRows.size()));
+
+        for (final java.util.List<String> row : shownRows) {
             sb.append("<tr>");
             sb.append(String.join("", row.stream()
                     .map(it -> "<td style='border: solid 1px #eee;'>" + it + "</td>")
@@ -120,22 +142,6 @@ public class QueryResultPanel extends JPanel {
         final StringBuilder sb = new StringBuilder(
                 MessageFormat.format("Query result of {0} queries.<hr><br>", queryResultList.size())
         );
-
-//        sb.append("""
-//                <style type='text/css'>
-//                    pre {
-//                        white-space: pre-wrap;
-//                        border: solid 1px #eee;
-//                    }
-//
-//                    table, table td, table th {
-//                        border-collapse: collapse;
-//                    }
-//                    table td,table th {
-//                        border: solid 1px #999;
-//                    }
-//                </style>
-//                """);
 
         queryResultList.stream()
                 .map(this::showEachResult)

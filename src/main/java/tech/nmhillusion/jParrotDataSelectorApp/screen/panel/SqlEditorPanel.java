@@ -28,7 +28,7 @@ public class SqlEditorPanel extends JPanel {
 
         this.sqlTextArea = new JTextArea();
         sqlTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
-        sqlTextArea.setText("SELECT * FROM t_user;");
+        sqlTextArea.setText("SELECT * FROM t_user;\nSELECT * FROM t_user tu where tu.enabled = 1;");
         sqlTextArea.setLineWrap(false);
         sqlTextArea.setRows(18);
 
