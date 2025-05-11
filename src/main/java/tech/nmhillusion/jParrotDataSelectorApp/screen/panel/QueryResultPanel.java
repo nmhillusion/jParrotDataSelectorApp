@@ -1,15 +1,21 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
+import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.n2mix.exception.MissingDataException;
 import tech.nmhillusion.n2mix.helper.YamlReader;
+import tech.nmhillusion.n2mix.helper.log.LogHelper;
+import tech.nmhillusion.n2mix.helper.office.excel.writer.ExcelWriteHelper;
+import tech.nmhillusion.n2mix.helper.office.excel.writer.model.BasicExcelDataModel;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
@@ -24,6 +30,8 @@ public class QueryResultPanel extends JPanel {
     private final ExecutionState executionState;
     private final JEditorPane resultTextArea = new JEditorPane();
     private final int maxRows;
+    private final Path outputPath = PathHelper.getPathOfResource("output");
+    private java.util.List<QueryResultModel> cachedQueryResultList;
 
     public QueryResultPanel(ExecutionState executionState) throws IOException {
         this.executionState = executionState;
@@ -42,6 +50,30 @@ public class QueryResultPanel extends JPanel {
         }
     }
 
+    private void buildActionBoxButtons(JPanel resultActionBox) {
+        final JButton btnCopy = new JButton("Copy");
+        btnCopy.addActionListener(e -> copyResultToClipboard());
+        btnCopy.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+        final JButton btnExport = new JButton("Export Excels");
+        btnExport.addActionListener(e -> {
+            try {
+                exportResultToExcel();
+            } catch (IOException | MissingDataException ex) {
+                JOptionPane.showMessageDialog(null
+                        , "Error when exporting data: " + ex.getMessage()
+                        , "Error"
+                        , JOptionPane.ERROR_MESSAGE
+                );
+            }
+        });
+        btnCopy.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+        resultActionBox.add(Box.createHorizontalGlue()); // Push subsequent components to the right
+        resultActionBox.add(btnCopy);
+        resultActionBox.add(btnExport);
+    }
+
     private void initComponents() {
         int rowIdx = 0;
         final GridBagConstraints gbc = new GridBagConstraints();
@@ -55,13 +87,10 @@ public class QueryResultPanel extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
 
         final JPanel resultActionBox = new JPanel();
-        resultActionBox.setLayout(new BorderLayout());
+        resultActionBox.setLayout(new BoxLayout(resultActionBox, BoxLayout.LINE_AXIS));
+//        resultActionBox.setAlignmentX(Component.RIGHT_ALIGNMENT);
 //        resultActionBox.setBackground(Color.green);
-        final JButton btnCopy = new JButton("Copy");
-        resultActionBox.add(
-                btnCopy, BorderLayout.EAST
-        );
-        btnCopy.addActionListener(e -> copyResultToClipboard());
+        buildActionBoxButtons(resultActionBox);
         add(
                 resultActionBox, gbc
         );
@@ -148,5 +177,63 @@ public class QueryResultPanel extends JPanel {
                 .forEach(sb::append);
 
         resultTextArea.setText(sb.toString());
+
+        cachedQueryResultList = queryResultList;
+    }
+
+    private void exportResultToExcel() throws IOException, MissingDataException {
+        if (null == cachedQueryResultList || cachedQueryResultList.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    null
+                    , "No result to export"
+                    , "Warning"
+                    , JOptionPane.WARNING_MESSAGE
+            );
+        }
+
+        final int tabSize = cachedQueryResultList.size();
+        for (int tabIdx = 0; tabIdx < tabSize; tabIdx++) {
+            final QueryResultModel queryResultModel = cachedQueryResultList.get(tabIdx);
+            final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
+
+            final byte[] tabData = new ExcelWriteHelper()
+                    .addSheetData(
+                            new BasicExcelDataModel()
+                                    .setHeaders(
+                                            List.of(
+                                                    dbExportDataModel.getHeader()
+                                            )
+                                    )
+                                    .setBodyData(
+                                            dbExportDataModel.getValues()
+                                    )
+                                    .setSheetName("Data")
+                    )
+                    .build();
+
+            final Path savePath = saveTabData(tabIdx, tabData);
+            LogHelper.getLogger(this).info(
+                    "saved path: {}", savePath
+            );
+        }
+
+        JOptionPane.showMessageDialog(
+                null
+                , "Export success"
+                , "Success"
+                , JOptionPane.INFORMATION_MESSAGE
+        );
+
+        ViewHelper.openFileExplorer(outputPath);
+    }
+
+    private Path saveTabData(int tabIdx, byte[] tabData) throws IOException {
+        final Path fileOutputPath = Path.of(String.valueOf(outputPath), "tab-" + tabIdx + ".xlsx");
+
+        try (final OutputStream fos = Files.newOutputStream(fileOutputPath)) {
+            fos.write(tabData);
+            fos.flush();
+            return fileOutputPath;
+        }
     }
 }
