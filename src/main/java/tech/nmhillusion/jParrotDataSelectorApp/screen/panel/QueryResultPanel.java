@@ -78,7 +78,7 @@ public class QueryResultPanel extends JPanel {
         final StringBuilder sb = new StringBuilder();
 
         sb.append(
-                MessageFormat.format("<pre class='language-sql'><code>{0}</code></pre>", queryResultModel.sqlText())
+                MessageFormat.format("<pre class='language-sql'><code>{0};</code></pre>", queryResultModel.sqlText())
         );
 
         final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
@@ -108,8 +108,9 @@ public class QueryResultPanel extends JPanel {
     }
 
     public void showResult(java.util.List<QueryResultModel> queryResultList) {
-
-        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder(
+                MessageFormat.format("Query result of {0} queries.<hr><br>", queryResultList.size())
+        );
 
         queryResultList.stream()
                 .map(this::showEachResult)
