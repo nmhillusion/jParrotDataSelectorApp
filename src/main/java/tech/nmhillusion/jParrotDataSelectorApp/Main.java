@@ -1,6 +1,7 @@
 package tech.nmhillusion.jParrotDataSelectorApp;
 
 import tech.nmhillusion.jParrotDataSelectorApp.screen.MainFrame;
+import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -15,6 +16,9 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
  */
 
 public class Main {
+    private static final String APP_NAME = "jParrotDataSelectorApp";
+    private static final ExecutionState executionState = new ExecutionState();
+
     public static void main(String[] args) throws URISyntaxException {
         getLogger(Main.class).info("Starting jParrotDataSelectorApp");
 
@@ -52,12 +56,25 @@ public class Main {
         final JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 860);
-        frame.setTitle("jParrotDataSelectorApp");
+        frame.setTitle(APP_NAME);
         frame.setLocationByPlatform(true);
 //        setIconForApp(frame);
 
+        executionState.addListener(() -> {
+            if (null == executionState.getDatasourceModel()) {
+                frame.setTitle(APP_NAME);
+                return;
+            }
+
+            final String dataSourceName = executionState.getDatasourceModel()
+                    .getDataSourceName();
+            frame.setTitle(dataSourceName + " - " + APP_NAME);
+            frame.revalidate();
+            frame.repaint();
+        });
+
         frame.setContentPane(
-                new MainFrame()
+                new MainFrame(executionState)
         );
 
 //        frame.pack();

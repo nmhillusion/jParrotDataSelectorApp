@@ -17,10 +17,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.List;
 import java.util.function.Predicate;
 
 import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
@@ -31,14 +29,19 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
  * created date: 2025-05-10
  */
 public class MainFrame extends JPanel {
-    private final ExecutionState executionState = new ExecutionState();
-    private final HeaderPanel headerPanel = new HeaderPanel(executionState);
-    private final SqlEditorPanel sqlEditorPanel = new SqlEditorPanel(executionState);
-    private final QueryResultPanel queryResultPanel = new QueryResultPanel(executionState);
+    private final ExecutionState executionState;
+    private final HeaderPanel headerPanel;
+    private final SqlEditorPanel sqlEditorPanel;
+    private final QueryResultPanel queryResultPanel;
     private final DatabaseLoader databaseLoader = new DatabaseLoader();
     private final Map<String, DatabaseExecutor> datasourceExecutorMap = new TreeMap<>();
 
-    public MainFrame() throws IOException {
+    public MainFrame(ExecutionState executionState) throws IOException {
+        this.executionState = executionState;
+        headerPanel = new HeaderPanel(executionState);
+        sqlEditorPanel = new SqlEditorPanel(executionState);
+        queryResultPanel = new QueryResultPanel(executionState);
+
         setLayout(new GridBagLayout());
 //        setBackground(Color.CYAN);
 
@@ -114,7 +117,7 @@ public class MainFrame extends JPanel {
         final String sqlTextAll = sqlEditorPanel.getSqlText();
         getLogger(this).info("exec for sql: {}", sqlTextAll);
 
-        java.util.List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
+        List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
                         sqlTextAll
                 ).split(";"))
                 .map(it -> StringUtil.trimWithNull(it) + ";")
@@ -140,7 +143,7 @@ public class MainFrame extends JPanel {
                     }
                 });
 
-        java.util.List<QueryResultModel> queryResultList = new ArrayList<>();
+        List<QueryResultModel> queryResultList = new ArrayList<>();
         for (final String sqlText : sqlBlockList) {
             final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
                     conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {

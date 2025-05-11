@@ -127,11 +127,18 @@ public class QueryResultPanel extends JPanel {
     }
 
     private void copyResultToClipboard() {
+        if (null == cachedQueryResultList || cachedQueryResultList.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No result to copy", "Warning", JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
         resultTextArea.select(0, resultTextArea.getText().length());
         resultTextArea.copy();
 
         JOptionPane.showMessageDialog(
-                null
+                this
                 , "Result copied to clipboard"
                 , "Success"
                 , JOptionPane.INFORMATION_MESSAGE
@@ -210,11 +217,13 @@ public class QueryResultPanel extends JPanel {
     private void exportResultToExcel() throws IOException, MissingDataException {
         if (null == cachedQueryResultList || cachedQueryResultList.isEmpty()) {
             JOptionPane.showMessageDialog(
-                    null
+                    this
                     , "No result to export"
                     , "Warning"
                     , JOptionPane.WARNING_MESSAGE
             );
+
+            return;
         }
 
         prepareOutputFolder();
@@ -271,7 +280,7 @@ public class QueryResultPanel extends JPanel {
         }
 
         JOptionPane.showMessageDialog(
-                null
+                this
                 , "Export success"
                 , "Success"
                 , JOptionPane.INFORMATION_MESSAGE

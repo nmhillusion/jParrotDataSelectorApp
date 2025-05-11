@@ -3,12 +3,16 @@ package tech.nmhillusion.jParrotDataSelectorApp.state;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.n2mix.type.Stringeable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * created by: nmhillusion
  * <p>
  * created date: 2025-05-10
  */
 public class ExecutionState extends Stringeable {
+    private final List<ExecutionStateListener> listeners = new ArrayList<>();
     private DatasourceModel datasourceModel;
     private String sqlData;
 
@@ -18,6 +22,7 @@ public class ExecutionState extends Stringeable {
 
     public ExecutionState setDatasourceModel(DatasourceModel datasourceModel) {
         this.datasourceModel = datasourceModel;
+        triggerListeners();
         return this;
     }
 
@@ -27,6 +32,15 @@ public class ExecutionState extends Stringeable {
 
     public ExecutionState setSqlData(String sqlData) {
         this.sqlData = sqlData;
+        triggerListeners();
         return this;
+    }
+
+    public void addListener(ExecutionStateListener listener) {
+        listeners.add(listener);
+    }
+
+    private void triggerListeners() {
+        listeners.forEach(ExecutionStateListener::updated);
     }
 }
