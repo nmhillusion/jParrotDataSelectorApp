@@ -1,5 +1,6 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 
+import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 
@@ -73,9 +74,14 @@ public class QueryResultPanel extends JPanel {
         );
     }
 
-    public void showResult(String sqlText, DbExportDataModel dbExportDataModel) {
-
+    private StringBuilder showEachResult(QueryResultModel queryResultModel) {
         final StringBuilder sb = new StringBuilder();
+
+        sb.append(
+                MessageFormat.format("<pre class='language-sql'><code>{0}</code></pre>", queryResultModel.sqlText())
+        );
+
+        final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
 
         sb.append("<table><thead>");
         final String headerRow = String.join("", dbExportDataModel
@@ -96,10 +102,19 @@ public class QueryResultPanel extends JPanel {
             sb.append("</tr>");
         }
 
-        sb.append("</tbody></table>");
+        sb.append("</tbody></table><br><hr><br>");
 
-        resultTextArea.setText(
-                MessageFormat.format("<pre class='language-sql'><code>{0}</code></pre>{1}", sqlText, sb.toString())
-        );
+        return sb;
+    }
+
+    public void showResult(java.util.List<QueryResultModel> queryResultList) {
+
+        final StringBuilder sb = new StringBuilder();
+
+        queryResultList.stream()
+                .map(this::showEachResult)
+                .forEach(sb::append);
+
+        resultTextArea.setText(sb.toString());
     }
 }

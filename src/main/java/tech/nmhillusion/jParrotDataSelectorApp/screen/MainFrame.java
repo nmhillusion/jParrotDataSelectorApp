@@ -2,6 +2,7 @@ package tech.nmhillusion.jParrotDataSelectorApp.screen;
 
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
+import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.HeaderPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.QueryResultPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.SqlEditorPanel;
@@ -9,13 +10,18 @@ import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
 import tech.nmhillusion.n2mix.helper.database.query.ExtractResultToPage;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
+import tech.nmhillusion.n2mix.util.StringUtil;
+import tech.nmhillusion.n2mix.validator.StringValidator;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 
 import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 
@@ -105,8 +111,15 @@ public class MainFrame extends JPanel {
     }
 
     private void onClickExecSql() throws Throwable {
-        final String sqlText = sqlEditorPanel.getSqlText();
-        getLogger(this).info("exec for sql: {}", sqlText);
+        final String sqlTextAll = sqlEditorPanel.getSqlText();
+        getLogger(this).info("exec for sql: {}", sqlTextAll);
+
+        java.util.List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
+                        sqlTextAll
+                ).split(";"))
+                .map(String::trim)
+                .filter(Predicate.not(StringValidator::isBlank))
+                .toList();
 
         getLogger(this).info("exec state: {}", executionState);
 
@@ -127,16 +140,20 @@ public class MainFrame extends JPanel {
                     }
                 });
 
-        final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
-                conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {
-                    final ResultSet resultSet = preparedStatement_.executeQuery();
+        java.util.List<QueryResultModel> queryResultList = new ArrayList<>();
+        for (final String sqlText : sqlBlockList) {
+            final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
+                    conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {
+                        final ResultSet resultSet = preparedStatement_.executeQuery();
 
-                    return ExtractResultToPage.buildDbExportDataModel(resultSet);
-                }));
+                        return ExtractResultToPage.buildDbExportDataModel(resultSet);
+                    }));
 
-        getLogger(this).info("exec result :: header = {}", dbExportDataModel.getHeader());
-        getLogger(this).info("exec result :: body = {}", dbExportDataModel.getValues());
+            queryResultList.add(new QueryResultModel(sqlText, dbExportDataModel));
+        }
 
-        queryResultPanel.showResult(sqlText, dbExportDataModel);
+        queryResultPanel.showResult(
+                queryResultList
+        );
     }
 }
