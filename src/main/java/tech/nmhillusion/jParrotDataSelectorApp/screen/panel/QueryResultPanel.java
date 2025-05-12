@@ -5,7 +5,6 @@ import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
-import tech.nmhillusion.n2mix.exception.MissingDataException;
 import tech.nmhillusion.n2mix.helper.YamlReader;
 import tech.nmhillusion.n2mix.helper.office.excel.writer.ExcelDataSheet;
 import tech.nmhillusion.n2mix.helper.office.excel.writer.ExcelWriteHelper;
@@ -19,6 +18,7 @@ import tech.nmhillusion.neon_di.annotation.Neon;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,6 +41,8 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 public class QueryResultPanel extends JPanel {
     private final ExecutionState executionState;
     private final JEditorPane resultTextArea = new JEditorPane();
+    private final JButton btnCopy = new JButton("Copy");
+    private final JButton btnExport = new JButton("Export Excels");
     private final int maxRows;
     private final Path outputPath = PathHelper.getPathOfResource("output");
     private java.util.List<QueryResultModel> cachedQueryResultList;
@@ -63,24 +65,13 @@ public class QueryResultPanel extends JPanel {
     }
 
     private void buildActionBoxButtons(JPanel resultActionBox) {
-        final JButton btnCopy = new JButton("Copy");
-        btnCopy.addActionListener(e -> copyResultToClipboard());
+        btnCopy.setEnabled(false);
+        btnCopy.addActionListener(this::copyResultToClipboard);
         btnCopy.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-        final JButton btnExport = new JButton("Export Excels");
-        btnExport.addActionListener(e -> {
-            try {
-                exportResultToExcel();
-            } catch (IOException | MissingDataException ex) {
-                getLogger(this).error(ex);
-                JOptionPane.showMessageDialog(null
-                        , "Error when exporting data: " + ex.getMessage()
-                        , "Error"
-                        , JOptionPane.ERROR_MESSAGE
-                );
-            }
-        });
-        btnCopy.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        btnExport.setEnabled(false);
+        btnExport.addActionListener(this::exportResultToExcel);
+        btnExport.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
         resultActionBox.add(Box.createHorizontalGlue()); // Push subsequent components to the right
         resultActionBox.add(btnCopy);
@@ -129,10 +120,13 @@ public class QueryResultPanel extends JPanel {
         );
     }
 
-    private void copyResultToClipboard() {
+    private void copyResultToClipboard(ActionEvent evt) {
         if (null == cachedQueryResultList || cachedQueryResultList.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "No result to copy", "Warning", JOptionPane.WARNING_MESSAGE
+            JOptionPane.showMessageDialog(
+                    evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
+                    , "No result to copy"
+                    , "Warning"
+                    , JOptionPane.WARNING_MESSAGE
             );
 
             return;
@@ -203,6 +197,9 @@ public class QueryResultPanel extends JPanel {
         resultTextArea.setText(sb.toString());
 
         cachedQueryResultList = queryResultList;
+
+        btnCopy.setEnabled(null != cachedQueryResultList && !cachedQueryResultList.isEmpty());
+        btnExport.setEnabled(null != cachedQueryResultList && !cachedQueryResultList.isEmpty());
     }
 
     private void prepareOutputFolder() throws IOException {
@@ -217,79 +214,88 @@ public class QueryResultPanel extends JPanel {
         }
     }
 
-    private void exportResultToExcel() throws IOException, MissingDataException {
-        if (null == cachedQueryResultList || cachedQueryResultList.isEmpty()) {
+    private void exportResultToExcel(ActionEvent evt) {
+        try {
+            if (null == cachedQueryResultList || cachedQueryResultList.isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
+                        , "No result to export"
+                        , "Warning"
+                        , JOptionPane.WARNING_MESSAGE
+                );
+
+                return;
+            }
+
+            prepareOutputFolder();
+
+            final int queryListSize = cachedQueryResultList.size();
+            final String queryId = DateUtil.format(Date.from(Instant.now()), "yyyy-MM-dd_HH-mm");
+
+            for (int queryIdx = 0; queryIdx < queryListSize; queryIdx++) {
+                final QueryResultModel queryResultModel = cachedQueryResultList.get(queryIdx);
+                final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
+
+                final byte[] queryData = new ExcelWriteHelper()
+                        .addSheetData(
+                                new BasicExcelDataModel()
+                                        .setHeaders(
+                                                List.of(
+                                                        dbExportDataModel.getHeader()
+                                                )
+                                        )
+                                        .setBodyData(
+                                                dbExportDataModel.getValues()
+                                        )
+                                        .setSheetName("Data")
+                        )
+                        .addSheetData(
+                                new BasicExcelDataModel()
+                                        .setHeaders(
+                                                List.of(
+                                                        List.of("SQL")
+                                                )
+                                        )
+                                        .setBodyData(
+                                                List.of(
+                                                        List.of(queryResultModel.sqlText())
+                                                )
+                                        )
+                                        .setSheetName("SQL")
+                                , (self, dataSheet, workbookRef, sheetRef) -> {
+                                    this.formatForSqlSheet(
+                                            queryResultModel.sqlText()
+                                            , self
+                                            , dataSheet
+                                            , workbookRef
+                                            , sheetRef
+                                    );
+                                }
+                        )
+                        .build();
+
+                final Path savePath = saveTabData(queryId, queryIdx, queryData);
+                getLogger(this).info(
+                        "saved path: {}", savePath
+                );
+            }
+
             JOptionPane.showMessageDialog(
                     this
-                    , "No result to export"
-                    , "Warning"
-                    , JOptionPane.WARNING_MESSAGE
+                    , "Export success"
+                    , "Success"
+                    , JOptionPane.INFORMATION_MESSAGE
             );
 
-            return;
-        }
-
-        prepareOutputFolder();
-
-        final int queryListSize = cachedQueryResultList.size();
-        final String queryId = DateUtil.format(Date.from(Instant.now()), "yyyy-MM-dd_HH-mm");
-
-        for (int queryIdx = 0; queryIdx < queryListSize; queryIdx++) {
-            final QueryResultModel queryResultModel = cachedQueryResultList.get(queryIdx);
-            final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
-
-            final byte[] queryData = new ExcelWriteHelper()
-                    .addSheetData(
-                            new BasicExcelDataModel()
-                                    .setHeaders(
-                                            List.of(
-                                                    dbExportDataModel.getHeader()
-                                            )
-                                    )
-                                    .setBodyData(
-                                            dbExportDataModel.getValues()
-                                    )
-                                    .setSheetName("Data")
-                    )
-                    .addSheetData(
-                            new BasicExcelDataModel()
-                                    .setHeaders(
-                                            List.of(
-                                                    List.of("SQL")
-                                            )
-                                    )
-                                    .setBodyData(
-                                            List.of(
-                                                    List.of(queryResultModel.sqlText())
-                                            )
-                                    )
-                                    .setSheetName("SQL")
-                            , (self, dataSheet, workbookRef, sheetRef) -> {
-                                this.formatForSqlSheet(
-                                        queryResultModel.sqlText()
-                                        , self
-                                        , dataSheet
-                                        , workbookRef
-                                        , sheetRef
-                                );
-                            }
-                    )
-                    .build();
-
-            final Path savePath = saveTabData(queryId, queryIdx, queryData);
-            getLogger(this).info(
-                    "saved path: {}", savePath
+            ViewHelper.openFileExplorer(outputPath);
+        } catch (Exception ex) {
+            getLogger(this).error(ex);
+            JOptionPane.showMessageDialog(null
+                    , "Error when exporting data: " + ex.getMessage()
+                    , "Error"
+                    , JOptionPane.ERROR_MESSAGE
             );
         }
-
-        JOptionPane.showMessageDialog(
-                this
-                , "Export success"
-                , "Success"
-                , JOptionPane.INFORMATION_MESSAGE
-        );
-
-        ViewHelper.openFileExplorer(outputPath);
     }
 
     private void formatForSqlSheet(String sqlText, ExcelWriteHelper self, ExcelDataSheet dataSheet, Workbook workbookRef, Sheet sheetRef) {
