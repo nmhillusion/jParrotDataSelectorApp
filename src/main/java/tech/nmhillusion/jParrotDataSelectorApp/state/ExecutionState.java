@@ -2,6 +2,7 @@ package tech.nmhillusion.jParrotDataSelectorApp.state;
 
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.n2mix.type.Stringeable;
+import tech.nmhillusion.neon_di.annotation.Neon;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  * <p>
  * created date: 2025-05-10
  */
+@Neon
 public class ExecutionState extends Stringeable {
     private final List<ExecutionStateListener> listeners = new ArrayList<>();
     private DatasourceModel datasourceModel;

@@ -1,6 +1,8 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.neon_di.annotation.Inject;
+import tech.nmhillusion.neon_di.annotation.Neon;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,11 +12,12 @@ import java.awt.*;
  * <p>
  * created date: 2025-05-10
  */
+@Neon
 public class SqlEditorPanel extends JPanel {
     private final ExecutionState executionState;
     private JTextArea sqlTextArea;
 
-    public SqlEditorPanel(ExecutionState executionState) {
+    public SqlEditorPanel(@Inject ExecutionState executionState) {
         this.executionState = executionState;
         initComponents();
     }

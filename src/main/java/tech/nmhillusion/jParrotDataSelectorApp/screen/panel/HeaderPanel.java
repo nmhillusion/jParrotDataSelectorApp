@@ -3,6 +3,8 @@ package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.neon_di.annotation.Inject;
+import tech.nmhillusion.neon_di.annotation.Neon;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,11 +16,14 @@ import java.util.List;
  * <p>
  * created date: 2025-05-10
  */
+@Neon
 public class HeaderPanel extends JPanel {
     private final ExecutionState executionState;
+    private final DatabaseLoader databaseLoader;
 
-    public HeaderPanel(ExecutionState executionState) throws IOException {
+    public HeaderPanel(@Inject ExecutionState executionState, @Inject DatabaseLoader databaseLoader) throws IOException {
         this.executionState = executionState;
+        this.databaseLoader = databaseLoader;
 
         setLayout(new GridBagLayout());
 
@@ -26,7 +31,7 @@ public class HeaderPanel extends JPanel {
     }
 
     private JComboBox<DatasourceModel> buildDataSourceSelectionBox() throws IOException {
-        final List<DatasourceModel> datasourceModels = new DatabaseLoader().loadDatasourceModels();
+        final List<DatasourceModel> datasourceModels = databaseLoader.loadDatasourceModels();
 
         final JComboBox<DatasourceModel> dataSourceSelectionBox = new JComboBox<>();
 

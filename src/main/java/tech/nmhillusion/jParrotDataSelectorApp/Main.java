@@ -3,6 +3,7 @@ package tech.nmhillusion.jParrotDataSelectorApp;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.MainFrame;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.neon_di.NeonEngine;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -21,7 +22,7 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 
 public class Main {
     private static final String APP_NAME = "jParrotDataSelectorApp";
-    private static final ExecutionState executionState = new ExecutionState();
+    private static final NeonEngine NEON_ENGINE = new NeonEngine();
 
     public static void main(String[] args) throws URISyntaxException {
         getLogger(Main.class).info("Starting jParrotDataSelectorApp");
@@ -41,8 +42,11 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> {
             try {
-                makeGUI();
-            } catch (IOException ex) {
+                NEON_ENGINE.run(Main.class);
+
+                final ExecutionState executionState = NEON_ENGINE.makeSureObtainNeon(ExecutionState.class);
+                makeGUI(executionState);
+            } catch (Exception ex) {
                 exitAppOnError(ex);
             }
         });
@@ -56,7 +60,7 @@ public class Main {
         }
     }
 
-    private static void makeGUI() throws IOException {
+    private static void makeGUI(ExecutionState executionState) throws IOException {
         final JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 860);
@@ -78,7 +82,7 @@ public class Main {
         });
 
         frame.setContentPane(
-                new MainFrame(executionState)
+                NEON_ENGINE.makeSureObtainNeon(MainFrame.class)
         );
 
 //        frame.pack();

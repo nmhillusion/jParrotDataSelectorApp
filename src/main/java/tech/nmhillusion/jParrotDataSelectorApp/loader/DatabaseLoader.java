@@ -10,6 +10,7 @@ import tech.nmhillusion.n2mix.helper.database.config.DatabaseConfigHelper;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseHelper;
 import tech.nmhillusion.n2mix.helper.log.LogHelper;
+import tech.nmhillusion.neon_di.annotation.Neon;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.util.regex.Pattern;
  * <p>
  * created date: 2025-05-10
  */
+@Neon
 public class DatabaseLoader {
     private static final Pattern JDBC_URL_PATTERN = Pattern.compile("jdbc:(\\w+?)://.+?", Pattern.CASE_INSENSITIVE);
 

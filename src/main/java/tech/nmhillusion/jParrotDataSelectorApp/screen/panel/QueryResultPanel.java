@@ -13,6 +13,8 @@ import tech.nmhillusion.n2mix.helper.office.excel.writer.model.BasicExcelDataMod
 import tech.nmhillusion.n2mix.helper.storage.FileHelper;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 import tech.nmhillusion.n2mix.util.DateUtil;
+import tech.nmhillusion.neon_di.annotation.Inject;
+import tech.nmhillusion.neon_di.annotation.Neon;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,6 +37,7 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
  * <p>
  * created date: 2025-05-10
  */
+@Neon
 public class QueryResultPanel extends JPanel {
     private final ExecutionState executionState;
     private final JEditorPane resultTextArea = new JEditorPane();
@@ -42,7 +45,7 @@ public class QueryResultPanel extends JPanel {
     private final Path outputPath = PathHelper.getPathOfResource("output");
     private java.util.List<QueryResultModel> cachedQueryResultList;
 
-    public QueryResultPanel(ExecutionState executionState) throws IOException {
+    public QueryResultPanel(@Inject ExecutionState executionState) throws IOException {
         this.executionState = executionState;
         maxRows = getConfig("showResult.maxRows", Integer.class);
 

@@ -12,6 +12,8 @@ import tech.nmhillusion.n2mix.helper.database.query.ExtractResultToPage;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 import tech.nmhillusion.n2mix.util.StringUtil;
 import tech.nmhillusion.n2mix.validator.StringValidator;
+import tech.nmhillusion.neon_di.annotation.Inject;
+import tech.nmhillusion.neon_di.annotation.Neon;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,19 +30,25 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
  * <p>
  * created date: 2025-05-10
  */
+@Neon
 public class MainFrame extends JPanel {
     private final ExecutionState executionState;
     private final HeaderPanel headerPanel;
     private final SqlEditorPanel sqlEditorPanel;
     private final QueryResultPanel queryResultPanel;
-    private final DatabaseLoader databaseLoader = new DatabaseLoader();
+    private final DatabaseLoader databaseLoader;
     private final Map<String, DatabaseExecutor> datasourceExecutorMap = new TreeMap<>();
 
-    public MainFrame(ExecutionState executionState) throws IOException {
+    public MainFrame(@Inject ExecutionState executionState,
+                     @Inject HeaderPanel headerPanel,
+                     @Inject SqlEditorPanel sqlEditorPanel,
+                     @Inject QueryResultPanel queryResultPanel,
+                     @Inject DatabaseLoader databaseLoader) throws IOException {
         this.executionState = executionState;
-        headerPanel = new HeaderPanel(executionState);
-        sqlEditorPanel = new SqlEditorPanel(executionState);
-        queryResultPanel = new QueryResultPanel(executionState);
+        this.headerPanel = headerPanel;
+        this.sqlEditorPanel = sqlEditorPanel;
+        this.queryResultPanel = queryResultPanel;
+        this.databaseLoader = databaseLoader;
 
         setLayout(new GridBagLayout());
 //        setBackground(Color.CYAN);
@@ -122,7 +130,18 @@ public class MainFrame extends JPanel {
         final String sqlTextAll = sqlEditorPanel.getSqlText();
         getLogger(this).info("exec for sql: {}", sqlTextAll);
 
-        List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
+        if (StringValidator.isBlank(sqlTextAll)) {
+            JOptionPane.showMessageDialog(
+                    this
+                    , "SQL is empty"
+                    , "Warning"
+                    , JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        final List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
                         sqlTextAll
                 ).split(";"))
                 .map(it -> StringUtil.trimWithNull(it) + ";")
