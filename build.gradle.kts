@@ -17,7 +17,10 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.nmhillusion:n2mix-java:2024.9.3")
+    // https://jitpack.io/#nmhillusion/neon-di
+    implementation("com.github.nmhillusion:neon-di:2024.5.5")
+    // https://jitpack.io/#nmhillusion/n2mix-java
+    implementation("com.github.nmhillusion:n2mix-java:2025.5.12")
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
     implementation("org.yaml:snakeyaml:2.4")
 

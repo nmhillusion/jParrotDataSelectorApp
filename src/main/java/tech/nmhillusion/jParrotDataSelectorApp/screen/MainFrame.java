@@ -93,7 +93,12 @@ public class MainFrame extends JPanel {
             try {
                 onClickExecSql();
             } catch (Throwable ex) {
-                throw new RuntimeException(ex);
+                getLogger(this).error(ex);
+                JOptionPane.showMessageDialog(btnExec
+                        , "Error when executing sql: " + ex.getMessage()
+                        , "Error"
+                        , JOptionPane.ERROR_MESSAGE
+                );
             }
         });
         add(
@@ -124,7 +129,8 @@ public class MainFrame extends JPanel {
                 .filter(Predicate.not(StringValidator::isBlank))
                 .toList();
 
-        getLogger(this).info("exec state: {}", executionState);
+        final String executionStateText = String.valueOf(executionState);
+        getLogger(this).info("exec state: {}", executionStateText);
 
         final DatasourceModel datasourceModel = executionState.getDatasourceModel();
 
