@@ -14,7 +14,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.util.List;
 
 /**
  * created by: nmhillusion
@@ -34,33 +33,8 @@ public class HeaderPanel extends JPanel {
         setLayout(new GridBagLayout());
 
         initComponents();
-    }
 
-    private JComboBox<DatasourceModel> buildDataSourceSelectionBox() throws IOException {
-        final List<DatasourceModel> datasourceModels = databaseLoader.loadDatasourceModels();
-
-        final JComboBox<DatasourceModel> dataSourceSelectionBox = new JComboBox<>();
-
-        for (final DatasourceModel datasourceModel : datasourceModels) {
-            dataSourceSelectionBox.addItem(datasourceModel);
-
-            if (null == executionState.getDatasourceModel()) {
-                executionState.setDatasourceModel(datasourceModel);
-            }
-        }
-
-        dataSourceSelectionBox.addItemListener(e -> {
-            final Object selectedItem = e.getItem();
-            if (selectedItem instanceof DatasourceModel datasourceModel) {
-                executionState.setDatasourceModel(datasourceModel);
-            }
-        });
-
-        dataSourceSelectionBox.setSelectedItem(
-                executionState.getDatasourceModel()
-        );
-
-        return dataSourceSelectionBox;
+        executionState.addListener(this::onApplyDataSource);
     }
 
     private void initComponents() throws IOException {
@@ -68,6 +42,7 @@ public class HeaderPanel extends JPanel {
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
+        gridBagConstraints.fill = GridBagConstraints.NONE;
         gridBagConstraints.insets = new Insets(5, 5, 5, 5);
 
         add(
@@ -79,6 +54,9 @@ public class HeaderPanel extends JPanel {
                 BorderFactory.createEtchedBorder(
                         EtchedBorder.LOWERED
                 )
+        );
+        btnChangeDatasource.setPreferredSize(
+                new Dimension(200, 20)
         );
         btnChangeDatasource.addActionListener(this::onClickChangeDatasource);
         gridBagConstraints.gridx = 1;
@@ -94,6 +72,15 @@ public class HeaderPanel extends JPanel {
         btn.setPreferredSize(dimension);
         btn.setMaximumSize(dimension);
         btn.setMinimumSize(dimension);
+    }
+
+    private void onApplyDataSource() {
+        final DatasourceModel datasourceModel = executionState.getDatasourceModel();
+        if (null == datasourceModel) {
+            btnChangeDatasource.setText("???");
+        } else {
+            btnChangeDatasource.setText(datasourceModel.getDataSourceName());
+        }
     }
 
     private void onClickChangeDatasource(ActionEvent evt) {
