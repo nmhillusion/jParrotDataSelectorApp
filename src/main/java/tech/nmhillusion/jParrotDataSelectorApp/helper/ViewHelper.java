@@ -32,4 +32,15 @@ public abstract class ViewHelper {
         return logView.getText().split("\n")
                 .length;
     }
+
+    public static JFrame getFrameAncestor(Component component) {
+        if (component == null) {
+            return null;
+        }
+        Component ancestor = component.getParent();
+        while (ancestor != null && !(ancestor instanceof JFrame)) {
+            ancestor = ancestor.getParent();
+        }
+        return (JFrame) ancestor;
+    }
 }
