@@ -274,18 +274,11 @@ public class QueryResultPanel extends JPanel {
                         )
                         .build();
 
-                final Path savePath = saveTabData(queryId, queryIdx, queryData);
+                final Path savePath = saveQueryData(queryId, queryIdx, queryData);
                 getLogger(this).info(
                         "saved path: {}", savePath
                 );
             }
-
-            JOptionPane.showMessageDialog(
-                    this
-                    , "Export success"
-                    , "Success"
-                    , JOptionPane.INFORMATION_MESSAGE
-            );
 
             ViewHelper.openFileExplorer(outputPath);
         } catch (Exception ex) {
@@ -320,7 +313,7 @@ public class QueryResultPanel extends JPanel {
         sheetRef.autoSizeColumn(columnIdxToFormat);
     }
 
-    private Path saveTabData(String queryId, int queryIdx, byte[] queryData) throws IOException {
+    private Path saveQueryData(String queryId, int queryIdx, byte[] queryData) throws IOException {
         final Path fileOutputPath = Path.of(String.valueOf(outputPath), "query-" + queryId + "--" + (queryIdx + 1) + ".xlsx");
 
         if (Files.exists(fileOutputPath)) {
