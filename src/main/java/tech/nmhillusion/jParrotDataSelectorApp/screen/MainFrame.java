@@ -17,6 +17,7 @@ import tech.nmhillusion.neon_di.annotation.Neon;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.*;
@@ -32,6 +33,7 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
  */
 @Neon
 public class MainFrame extends JPanel {
+    private static final EmptyBorderSize EMPTY_BORDER_SIZE = new EmptyBorderSize(2, 5, 2, 5);
     private final ExecutionState executionState;
     private final HeaderPanel headerPanel;
     private final SqlEditorPanel sqlEditorPanel;
@@ -50,138 +52,145 @@ public class MainFrame extends JPanel {
         this.queryResultPanel = queryResultPanel;
         this.databaseLoader = databaseLoader;
 
-        setLayout(new GridBagLayout());
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 //        setBackground(Color.CYAN);
 
         initComponents();
     }
 
-    private void initComponents() throws IOException {
-        int rowIdx = 0;
+    private void setHeightForComponent(Component comp, int height) {
+        final Dimension preferredSize = new Dimension(Short.MAX_VALUE, height);
 
-        final Insets defaultInsets = new Insets(2, 5, 2, 5);
-
-        final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = rowIdx++;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.gridwidth = 1;
-        gbc.gridheight = 1;
-        gbc.weightx = 1;
-        gbc.weighty = 0;
-        gbc.insets = defaultInsets;
-
-        add(
-                headerPanel, gbc
-        );
-
-        gbc.gridy = rowIdx++;
-        add(
-                new JSeparator(), gbc
-        );
-
-        gbc.gridy = rowIdx++;
-        add(
-                sqlEditorPanel, gbc
-        );
-
-        gbc.gridy = rowIdx++;
-        add(
-                new JSeparator(), gbc
-        );
-
-        gbc.gridy = rowIdx++;
-        gbc.weighty = 0;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.CENTER;
-        final JButton btnExec = new JButton("Execute");
-        btnExec.setPreferredSize(new Dimension(200, 30));
-        btnExec.addActionListener(e -> {
-            try {
-                onClickExecSql();
-            } catch (Throwable ex) {
-                getLogger(this).error(ex);
-                JOptionPane.showMessageDialog(btnExec
-                        , "Error when executing sql: " + ex.getMessage()
-                        , "Error"
-                        , JOptionPane.ERROR_MESSAGE
-                );
-            }
-        });
-        add(
-                btnExec, gbc
-        );
-
-        gbc.gridy = rowIdx++;
-        add(
-                new JSeparator(), gbc
-        );
-
-        gbc.gridy = rowIdx++;
-        gbc.weighty = 1;
-        gbc.fill = GridBagConstraints.BOTH;
-        add(
-                queryResultPanel, gbc
-        );
+        comp.setPreferredSize(preferredSize);
+        comp.setMaximumSize(preferredSize);
+        comp.setMinimumSize(preferredSize);
     }
 
-    private void onClickExecSql() throws Throwable {
-        final String sqlTextAll = sqlEditorPanel.getSqlText();
-        getLogger(this).info("exec for sql: {}", sqlTextAll);
+    private void initComponents() {
+        {
+            add(
+                    headerPanel
+            );
+            setHeightForComponent(headerPanel, 50);
+            headerPanel.setBorder(BorderFactory.createEmptyBorder(
+                    EMPTY_BORDER_SIZE.top()
+                    , EMPTY_BORDER_SIZE.left()
+                    , EMPTY_BORDER_SIZE.bottom()
+                    , EMPTY_BORDER_SIZE.right()
+            ));
+        }
 
-        if (StringValidator.isBlank(sqlTextAll)) {
-            JOptionPane.showMessageDialog(
-                    this
-                    , "SQL is empty"
-                    , "Warning"
-                    , JOptionPane.WARNING_MESSAGE
+        {
+            add(
+                    sqlEditorPanel
+            );
+            setHeightForComponent(sqlEditorPanel, 350);
+            sqlEditorPanel.setBorder(BorderFactory.createEmptyBorder(
+                    EMPTY_BORDER_SIZE.top()
+                    , EMPTY_BORDER_SIZE.left()
+                    , EMPTY_BORDER_SIZE.bottom()
+                    , EMPTY_BORDER_SIZE.right()
+            ));
+        }
+
+        {
+            final JPanel btnExecPanel = new JPanel(new FlowLayout());
+
+            final JButton btnExec = new JButton("Execute");
+            btnExec.setPreferredSize(new Dimension(200, 30));
+            btnExec.addActionListener(this::onClickExecSql);
+            btnExec.setAlignmentX(Component.RIGHT_ALIGNMENT);
+            btnExecPanel.add(btnExec);
+
+            add(
+                    btnExecPanel
+            );
+            setHeightForComponent(btnExecPanel, 50);
+        }
+
+        {
+            add(
+                    queryResultPanel
+            );
+            queryResultPanel.setBorder(BorderFactory.createEmptyBorder(
+                    EMPTY_BORDER_SIZE.top()
+                    , EMPTY_BORDER_SIZE.left()
+                    , EMPTY_BORDER_SIZE.bottom()
+                    , EMPTY_BORDER_SIZE.right()
+            ));
+        }
+    }
+
+    private void onClickExecSql(ActionEvent evt) {
+        try {
+            final String sqlTextAll = sqlEditorPanel.getSqlText();
+            getLogger(this).info("exec for sql: {}", sqlTextAll);
+
+            if (StringValidator.isBlank(sqlTextAll)) {
+                JOptionPane.showMessageDialog(
+                        evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
+                        , "SQL is empty"
+                        , "Warning"
+                        , JOptionPane.WARNING_MESSAGE
+                );
+
+                return;
+            }
+
+            final List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
+                            sqlTextAll
+                    ).split(";"))
+                    .map(it -> StringUtil.trimWithNull(it) + ";")
+                    .filter(Predicate.not(StringValidator::isBlank))
+                    .toList();
+
+            final String executionStateText = String.valueOf(executionState);
+            getLogger(this).info("exec state: {}", executionStateText);
+
+            final DatasourceModel datasourceModel = executionState.getDatasourceModel();
+
+            getLogger(this).info("exec datasource: {}", datasourceModel);
+
+            if (null == datasourceModel) {
+                throw new IllegalStateException("Not found datasource");
+            }
+
+            final DatabaseExecutor databaseExecutor = datasourceExecutorMap.computeIfAbsent(datasourceModel.getDataSourceName()
+                    , datasourceName -> {
+                        try {
+                            return databaseLoader.prepareDatabaseExecutor(datasourceModel);
+                        } catch (Throwable e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+
+            final List<QueryResultModel> queryResultList = new ArrayList<>();
+            for (final String sqlText : sqlBlockList) {
+                final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
+                        conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {
+                            final ResultSet resultSet = preparedStatement_.executeQuery();
+
+                            return ExtractResultToPage.buildDbExportDataModel(resultSet);
+                        }));
+
+                queryResultList.add(new QueryResultModel(sqlText, dbExportDataModel));
+            }
+
+            queryResultPanel.showResult(
+                    queryResultList
             );
 
-            return;
+        } catch (Throwable ex) {
+            getLogger(this).error(ex);
+            JOptionPane.showMessageDialog(
+                    evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
+                    , "Error when executing sql: " + ex.getMessage()
+                    , "Error"
+                    , JOptionPane.ERROR_MESSAGE
+            );
         }
+    }
 
-        final List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
-                        sqlTextAll
-                ).split(";"))
-                .map(it -> StringUtil.trimWithNull(it) + ";")
-                .filter(Predicate.not(StringValidator::isBlank))
-                .toList();
-
-        final String executionStateText = String.valueOf(executionState);
-        getLogger(this).info("exec state: {}", executionStateText);
-
-        final DatasourceModel datasourceModel = executionState.getDatasourceModel();
-
-        getLogger(this).info("exec datasource: {}", datasourceModel);
-
-        if (null == datasourceModel) {
-            throw new IllegalStateException("Not found datasource");
-        }
-
-        final DatabaseExecutor databaseExecutor = datasourceExecutorMap.computeIfAbsent(datasourceModel.getDataSourceName()
-                , datasourceName -> {
-                    try {
-                        return databaseLoader.prepareDatabaseExecutor(datasourceModel);
-                    } catch (Throwable e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-
-        final List<QueryResultModel> queryResultList = new ArrayList<>();
-        for (final String sqlText : sqlBlockList) {
-            final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
-                    conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {
-                        final ResultSet resultSet = preparedStatement_.executeQuery();
-
-                        return ExtractResultToPage.buildDbExportDataModel(resultSet);
-                    }));
-
-            queryResultList.add(new QueryResultModel(sqlText, dbExportDataModel));
-        }
-
-        queryResultPanel.showResult(
-                queryResultList
-        );
+    record EmptyBorderSize(int top, int left, int bottom, int right) {
     }
 }

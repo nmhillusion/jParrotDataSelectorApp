@@ -19,14 +19,14 @@ public class SqlEditorPanel extends JPanel {
 
     public SqlEditorPanel(@Inject ExecutionState executionState) {
         this.executionState = executionState;
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         initComponents();
     }
 
     private void initComponents() {
-        setLayout(new BorderLayout());
 
         add(
-                new JLabel("SQL:"), BorderLayout.NORTH
+                new JLabel("SQL:")
         );
 
         this.sqlTextArea = new JTextArea();
@@ -36,7 +36,7 @@ public class SqlEditorPanel extends JPanel {
         sqlTextArea.setRows(18);
 
         add(
-                new JScrollPane(sqlTextArea), BorderLayout.CENTER
+                new JScrollPane(sqlTextArea)
         );
     }
 
