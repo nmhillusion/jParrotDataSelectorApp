@@ -20,7 +20,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.sql.ResultSet;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -39,7 +40,6 @@ public class MainFrame extends JPanel {
     private final SqlEditorPanel sqlEditorPanel;
     private final QueryResultPanel queryResultPanel;
     private final DatabaseLoader databaseLoader;
-    private final Map<String, DatabaseExecutor> datasourceExecutorMap = new TreeMap<>();
 
     public MainFrame(@Inject ExecutionState executionState,
                      @Inject HeaderPanel headerPanel,
@@ -155,14 +155,16 @@ public class MainFrame extends JPanel {
                 throw new IllegalStateException("Not found datasource");
             }
 
-            final DatabaseExecutor databaseExecutor = datasourceExecutorMap.computeIfAbsent(datasourceModel.getDataSourceName()
-                    , datasourceName -> {
-                        try {
-                            return databaseLoader.prepareDatabaseExecutor(datasourceModel);
-                        } catch (Throwable e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+            final DatabaseExecutor databaseExecutor = databaseLoader.prepareDatabaseExecutor(datasourceModel, ex -> {
+                getLogger(this).error(ex);
+
+                JOptionPane.showMessageDialog(
+                        evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
+                        , "Error when connecting to database: " + ex.getMessage()
+                        , "Error"
+                        , JOptionPane.ERROR_MESSAGE
+                );
+            });
 
             final List<QueryResultModel> queryResultList = new ArrayList<>();
             for (final String sqlText : sqlBlockList) {

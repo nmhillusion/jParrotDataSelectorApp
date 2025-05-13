@@ -1,2 +1,7 @@
 showResult:
   maxRows: 20
+
+database-validation:
+  oracle: select 1 from dual
+  mysql: select 1
+  sqlserver: select 1

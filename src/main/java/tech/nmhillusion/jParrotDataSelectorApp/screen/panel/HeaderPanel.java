@@ -49,7 +49,6 @@ public class HeaderPanel extends JPanel {
                 new JLabel("Data Source:"), gridBagConstraints
         );
 
-//        final JComboBox<DatasourceModel> dataSourceSelectionBox = buildDataSourceSelectionBox();
         btnChangeDatasource.setBorder(
                 BorderFactory.createEtchedBorder(
                         EtchedBorder.LOWERED
@@ -112,6 +111,8 @@ public class HeaderPanel extends JPanel {
                         btn.addMouseListener(new DoubleClickMouseListener() {
                             @Override
                             public void onDoubleClick(MouseEvent e) {
+                                throwIfFailConnectionDS(it);
+
                                 executionState.setDatasourceModel(it);
                                 jDialog.dispose();
                             }
@@ -151,6 +152,19 @@ public class HeaderPanel extends JPanel {
                     , JOptionPane.ERROR_MESSAGE
             );
         }
+    }
+
+    private void throwIfFailConnectionDS(DatasourceModel it) {
+        databaseLoader.checkConnection(it, ex -> {
+            JOptionPane.showMessageDialog(
+                    this
+                    , "Error when connecting to database: " + ex.getMessage()
+                    , "Error"
+                    , JOptionPane.ERROR_MESSAGE
+            );
+
+            throw new RuntimeException(ex);
+        });
     }
 
 }
