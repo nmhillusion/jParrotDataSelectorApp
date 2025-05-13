@@ -109,7 +109,7 @@ public class DatabaseLoader {
     }
 
     public List<DatasourceModel> loadDatasourceModels() throws IOException {
-        final Path pathOfResource = PathHelper.getPathOfResource("config/db.example.yml");
+        final Path pathOfResource = PathHelper.getPathOfResource("config/db.yml");
         try (final InputStream fis = Files.newInputStream(pathOfResource)) {
             final List<?> databaseRawList = new YamlReader(fis).getProperty("databases", List.class);
 
@@ -136,6 +136,15 @@ public class DatabaseLoader {
                     datasourceModel.setJdbcUrl(jdbcUrl);
                     datasourceModel.setUsername(databaseMap.get("username").toString());
                     datasourceModel.setPassword(databaseMap.get("password").toString());
+
+                    if (resultList
+                            .stream()
+                            .anyMatch(ds ->
+                                    ds.getDataSourceName().equalsIgnoreCase(datasourceModel.getDataSourceName())
+                            )
+                    ) {
+                        throw new IllegalStateException("Duplicate datasource name: " + datasourceModel.getDataSourceName());
+                    }
 
                     resultList.add(datasourceModel);
                 }

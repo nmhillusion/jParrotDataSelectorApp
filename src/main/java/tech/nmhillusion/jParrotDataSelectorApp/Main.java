@@ -1,6 +1,7 @@
 package tech.nmhillusion.jParrotDataSelectorApp;
 
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
+import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.MainFrame;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.neon_di.NeonEngine;
@@ -45,11 +46,28 @@ public class Main {
                 NEON_ENGINE.run(Main.class);
 
                 final ExecutionState executionState = NEON_ENGINE.makeSureObtainNeon(ExecutionState.class);
+                throwIfInvalidDbConfig();
                 makeGUI(executionState);
             } catch (Exception ex) {
                 exitAppOnError(ex);
             }
         });
+    }
+
+    private static void throwIfInvalidDbConfig() throws IOException {
+        final DatabaseLoader databaseLoader = NEON_ENGINE.makeSureObtainNeon(DatabaseLoader.class);
+        try {
+            databaseLoader.loadDatasourceModels();
+        } catch (Throwable ex) {
+            getLogger(Main.class).error(ex);
+            JOptionPane.showMessageDialog(
+                    null
+                    , "Error when init program [%s]: %s".formatted(ex.getClass().getSimpleName(), ex.getMessage())
+                    , "Error"
+                    , JOptionPane.ERROR_MESSAGE
+            );
+            throw ex;
+        }
     }
 
     private static void setLookAndFeelUI() {
