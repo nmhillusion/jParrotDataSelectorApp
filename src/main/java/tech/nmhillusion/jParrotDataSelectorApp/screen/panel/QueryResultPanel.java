@@ -5,6 +5,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
 import tech.nmhillusion.n2mix.helper.YamlReader;
 import tech.nmhillusion.n2mix.helper.office.excel.writer.ExcelDataSheet;
 import tech.nmhillusion.n2mix.helper.office.excel.writer.ExcelWriteHelper;
@@ -46,6 +47,7 @@ public class QueryResultPanel extends JPanel {
     private final int maxRows;
     private final Path outputPath = PathHelper.getPathOfResource("output");
     private java.util.List<QueryResultModel> cachedQueryResultList;
+    private LoadingStateListener loadingStateListener;
 
     public QueryResultPanel(@Inject ExecutionState executionState) throws IOException {
         this.executionState = executionState;
@@ -216,79 +218,104 @@ public class QueryResultPanel extends JPanel {
 
     private void exportResultToExcel(ActionEvent evt) {
         try {
-            if (null == cachedQueryResultList || cachedQueryResultList.isEmpty()) {
-                JOptionPane.showMessageDialog(
-                        evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
-                        , "No result to export"
-                        , "Warning"
-                        , JOptionPane.WARNING_MESSAGE
-                );
-
-                return;
-            }
-
-            prepareOutputFolder();
-
-            final int queryListSize = cachedQueryResultList.size();
-            final String queryId = DateUtil.format(Date.from(Instant.now()), "yyyy-MM-dd_HH-mm");
-
-            for (int queryIdx = 0; queryIdx < queryListSize; queryIdx++) {
-                final QueryResultModel queryResultModel = cachedQueryResultList.get(queryIdx);
-                final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
-
-                final byte[] queryData = new ExcelWriteHelper()
-                        .addSheetData(
-                                new BasicExcelDataModel()
-                                        .setHeaders(
-                                                List.of(
-                                                        dbExportDataModel.getHeader()
-                                                )
-                                        )
-                                        .setBodyData(
-                                                dbExportDataModel.getValues()
-                                        )
-                                        .setSheetName("Data")
-                        )
-                        .addSheetData(
-                                new BasicExcelDataModel()
-                                        .setHeaders(
-                                                List.of(
-                                                        List.of("SQL")
-                                                )
-                                        )
-                                        .setBodyData(
-                                                List.of(
-                                                        List.of(queryResultModel.sqlText())
-                                                )
-                                        )
-                                        .setSheetName("SQL")
-                                , (self, dataSheet, workbookRef, sheetRef) -> {
-                                    this.formatForSqlSheet(
-                                            queryResultModel.sqlText()
-                                            , self
-                                            , dataSheet
-                                            , workbookRef
-                                            , sheetRef
-                                    );
-                                }
-                        )
-                        .build();
-
-                final Path savePath = saveQueryData(queryId, queryIdx, queryData);
-                getLogger(this).info(
-                        "saved path: {}", savePath
-                );
-            }
-
-            ViewHelper.openFileExplorer(outputPath);
-        } catch (Exception ex) {
+            loadingStateListener.onLoadingStateChange(true);
+            doExportResultToExcel(evt).execute();
+        } catch (Throwable ex) {
             getLogger(this).error(ex);
-            JOptionPane.showMessageDialog(null
-                    , "Error when exporting data: " + ex.getMessage()
+            JOptionPane.showMessageDialog(
+                    btnExport
+                    , "Error when export result: " + ex.getMessage()
                     , "Error"
                     , JOptionPane.ERROR_MESSAGE
             );
         }
+    }
+
+    private SwingWorker<Path, Void> doExportResultToExcel(ActionEvent evt) {
+        return new SwingWorker<Path, Void>() {
+            @Override
+            protected Path doInBackground() throws Exception {
+                try {
+                    if (null == cachedQueryResultList || cachedQueryResultList.isEmpty()) {
+                        throw new IllegalStateException("No result to export");
+                    }
+
+                    prepareOutputFolder();
+
+                    final int queryListSize = cachedQueryResultList.size();
+                    final String queryId = DateUtil.format(Date.from(Instant.now()), "yyyy-MM-dd_HH-mm");
+
+                    for (int queryIdx = 0; queryIdx < queryListSize; queryIdx++) {
+                        final QueryResultModel queryResultModel = cachedQueryResultList.get(queryIdx);
+                        final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
+
+                        final byte[] queryData = new ExcelWriteHelper()
+                                .addSheetData(
+                                        new BasicExcelDataModel()
+                                                .setHeaders(
+                                                        List.of(
+                                                                dbExportDataModel.getHeader()
+                                                        )
+                                                )
+                                                .setBodyData(
+                                                        dbExportDataModel.getValues()
+                                                )
+                                                .setSheetName("Data")
+                                )
+                                .addSheetData(
+                                        new BasicExcelDataModel()
+                                                .setHeaders(
+                                                        List.of(
+                                                                List.of("SQL")
+                                                        )
+                                                )
+                                                .setBodyData(
+                                                        List.of(
+                                                                List.of(queryResultModel.sqlText())
+                                                        )
+                                                )
+                                                .setSheetName("SQL")
+                                        , (self, dataSheet, workbookRef, sheetRef) -> {
+                                            formatForSqlSheet(
+                                                    queryResultModel.sqlText()
+                                                    , self
+                                                    , dataSheet
+                                                    , workbookRef
+                                                    , sheetRef
+                                            );
+                                        }
+                                )
+                                .build();
+
+                        final Path savePath = saveQueryData(queryId, queryIdx, queryData);
+                        getLogger(this).info(
+                                "saved path: {}", savePath
+                        );
+                    }
+
+                    return outputPath;
+                } catch (Exception ex) {
+                    getLogger(this).error(ex);
+                    throw ex;
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    loadingStateListener.onLoadingStateChange(false);
+                    ViewHelper.openFileExplorer(outputPath);
+                } catch (IOException ex) {
+                    getLogger(this).error(ex);
+                    JOptionPane.showMessageDialog(
+                            btnExport
+                            , "Error when open folder: " + ex.getMessage()
+                            , "Error"
+                            , JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+        };
     }
 
     private void formatForSqlSheet(String sqlText, ExcelWriteHelper self, ExcelDataSheet dataSheet, Workbook workbookRef, Sheet sheetRef) {
@@ -325,5 +352,9 @@ public class QueryResultPanel extends JPanel {
             fos.flush();
             return fileOutputPath;
         }
+    }
+
+    public void setLoadingStateListener(LoadingStateListener loadingStateListener) {
+        this.loadingStateListener = loadingStateListener;
     }
 }
