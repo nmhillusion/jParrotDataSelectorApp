@@ -5,6 +5,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DoubleClickMouseListener;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
 import tech.nmhillusion.neon_di.annotation.Inject;
 import tech.nmhillusion.neon_di.annotation.Neon;
 
@@ -14,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * created by: nmhillusion
@@ -25,6 +27,7 @@ public class HeaderPanel extends JPanel {
     private final ExecutionState executionState;
     private final DatabaseLoader databaseLoader;
     private final JButton btnChangeDatasource = new JButton("???");
+    private LoadingStateListener loadingStateListener;
 
     public HeaderPanel(@Inject ExecutionState executionState, @Inject DatabaseLoader databaseLoader) throws IOException {
         this.executionState = executionState;
@@ -35,6 +38,11 @@ public class HeaderPanel extends JPanel {
         initComponents();
 
         executionState.addListener(this::onApplyDataSource);
+    }
+
+    public HeaderPanel setLoadingStateListener(LoadingStateListener loadingStateListener) {
+        this.loadingStateListener = loadingStateListener;
+        return this;
     }
 
     private void initComponents() throws IOException {
@@ -155,16 +163,36 @@ public class HeaderPanel extends JPanel {
     }
 
     private void throwIfFailConnectionDS(DatasourceModel it) {
-        databaseLoader.checkConnection(it, ex -> {
-            JOptionPane.showMessageDialog(
-                    this
-                    , "Error when connecting to database: " + ex.getMessage()
-                    , "Error"
-                    , JOptionPane.ERROR_MESSAGE
-            );
+        loadingStateListener.onLoadingStateChange(true);
 
-            throw new RuntimeException(ex);
-        });
+        new SwingWorker<Boolean, Throwable>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                databaseLoader.checkConnection(it, ex -> {
+                    executionState.setDatasourceModel(null);
+                    publish(ex);
+                });
+
+                return true;
+            }
+
+            @Override
+            protected void process(List<Throwable> chunks) {
+                if (null != chunks && !chunks.isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                            btnChangeDatasource
+                            , chunks.getFirst()
+                            , "Error"
+                            , JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+
+            @Override
+            protected void done() {
+                loadingStateListener.onLoadingStateChange(false);
+            }
+        }.execute();
     }
 
 }
