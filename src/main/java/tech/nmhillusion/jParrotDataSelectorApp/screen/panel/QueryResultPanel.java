@@ -57,6 +57,12 @@ public class QueryResultPanel extends JPanel {
         setLayout(new GridBagLayout());
 
         initComponents();
+
+        executionState.addListener(() -> {
+            final boolean isLoading = executionState.getIsLoading();
+            btnCopy.setEnabled(!isLoading);
+            btnExport.setEnabled(!isLoading);
+        });
     }
 
     private <T> T getConfig(String configKey, Class<T> clazz2Cast) throws IOException {
@@ -143,7 +149,7 @@ public class QueryResultPanel extends JPanel {
         resultTextArea.copy();
 
         JOptionPane.showMessageDialog(
-                this
+                evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
                 , "Result copied to clipboard"
                 , "Success"
                 , JOptionPane.INFORMATION_MESSAGE
