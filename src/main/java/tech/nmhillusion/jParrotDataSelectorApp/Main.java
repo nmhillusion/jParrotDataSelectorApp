@@ -46,12 +46,17 @@ public class Main {
                 NEON_ENGINE.run(Main.class);
 
                 final ExecutionState executionState = NEON_ENGINE.makeSureObtainNeon(ExecutionState.class);
+                initForExecutionState(executionState);
                 throwIfInvalidDbConfig();
                 makeGUI(executionState);
             } catch (Exception ex) {
                 exitAppOnError(ex);
             }
         });
+    }
+
+    private static void initForExecutionState(ExecutionState executionState) {
+        executionState.setDatasourceModel(null);
     }
 
     private static void throwIfInvalidDbConfig() throws IOException {
