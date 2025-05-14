@@ -20,9 +20,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 
 import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
@@ -40,6 +43,8 @@ public class MainFrame extends JPanel {
     private final SqlEditorPanel sqlEditorPanel;
     private final QueryResultPanel queryResultPanel;
     private final DatabaseLoader databaseLoader;
+    private final JButton btnExec = new JButton("Execute");
+    private final JProgressBar progressBar = new JProgressBar();
 
     public MainFrame(@Inject ExecutionState executionState,
                      @Inject HeaderPanel headerPanel,
@@ -56,6 +61,15 @@ public class MainFrame extends JPanel {
 //        setBackground(Color.CYAN);
 
         initComponents();
+
+        executionState.addListener(() -> {
+            final DatasourceModel datasourceModel = executionState.getDatasourceModel();
+            if (null == datasourceModel) {
+                btnExec.setEnabled(false);
+            } else {
+                btnExec.setEnabled(true);
+            }
+        });
     }
 
     private void setHeightForComponent(Component comp, int height) {
@@ -96,7 +110,6 @@ public class MainFrame extends JPanel {
         {
             final JPanel btnExecPanel = new JPanel(new FlowLayout());
 
-            final JButton btnExec = new JButton("Execute");
             btnExec.setPreferredSize(new Dimension(200, 30));
             btnExec.addActionListener(this::onClickExecSql);
             btnExec.setAlignmentX(Component.RIGHT_ALIGNMENT);
@@ -106,6 +119,12 @@ public class MainFrame extends JPanel {
                     btnExecPanel
             );
             setHeightForComponent(btnExecPanel, 50);
+        }
+
+        {
+            add(progressBar);
+            setHeightForComponent(progressBar, 20);
+            setLoadingState(false);
         }
 
         {
@@ -166,22 +185,21 @@ public class MainFrame extends JPanel {
                 );
             });
 
-            final List<QueryResultModel> queryResultList = new ArrayList<>();
-            for (final String sqlText : sqlBlockList) {
-                final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
-                        conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {
-                            final ResultSet resultSet = preparedStatement_.executeQuery();
+            final CompletableFuture<List<QueryResultModel>> completableFuture = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return doExecSqlQueries(sqlBlockList, databaseExecutor);
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
-                            return ExtractResultToPage.buildDbExportDataModel(resultSet);
-                        }));
-
-                queryResultList.add(new QueryResultModel(sqlText, dbExportDataModel));
-            }
-
-            queryResultPanel.showResult(
-                    queryResultList
-            );
-
+            completableFuture.whenComplete((value, ex) -> {
+                SwingUtilities.invokeLater(() -> {
+                    queryResultPanel.showResult(
+                            value
+                    );
+                });
+            });
         } catch (Throwable ex) {
             getLogger(this).error(ex);
             JOptionPane.showMessageDialog(
@@ -191,6 +209,60 @@ public class MainFrame extends JPanel {
                     , JOptionPane.ERROR_MESSAGE
             );
         }
+    }
+
+    private List<QueryResultModel> doExecSqlQueries(List<String> sqlBlockList, DatabaseExecutor databaseExecutor) throws InterruptedException, ExecutionException {
+        final SwingWorker<List<QueryResultModel>, Void> swingWorker = new SwingWorker<>() {
+            @Override
+            protected List<QueryResultModel> doInBackground() throws Exception {
+                final List<QueryResultModel> queryResultList = new ArrayList<>();
+
+                publish();
+                try {
+                    for (final String sqlText : sqlBlockList) {
+                        publish();
+                        getLogger(this).info("exec sql: {}", sqlText);
+
+                        final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
+                                conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {
+                                    final ResultSet resultSet = preparedStatement_.executeQuery();
+
+                                    return ExtractResultToPage.buildDbExportDataModel(resultSet);
+                                }));
+
+                        queryResultList.add(new QueryResultModel(sqlText, dbExportDataModel));
+
+                        publish();
+                    }
+                } catch (Throwable ex) {
+                    getLogger(this).error(ex);
+                    throw new SQLException(ex);
+                }
+
+                return queryResultList;
+            }
+
+            @Override
+            protected void process(List<Void> chunks) {
+                setLoadingState(true);
+            }
+
+            @Override
+            protected void done() {
+                setLoadingState(false);
+            }
+        };
+
+        swingWorker.execute();
+
+        return swingWorker.get();
+    }
+
+    private void setLoadingState(boolean isLoading) {
+        btnExec.setEnabled(!isLoading);
+        progressBar.setIndeterminate(isLoading);
+        progressBar.setValue(isLoading ? 0 : 100);
+        progressBar.setVisible(isLoading);
     }
 
     record EmptyBorderSize(int top, int left, int bottom, int right) {
