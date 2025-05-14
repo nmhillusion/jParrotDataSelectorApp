@@ -63,14 +63,14 @@ public class MainFrame extends JPanel implements LoadingStateListener {
 
         initComponents();
 
-        executionState.addListener(() -> {
-            final DatasourceModel datasourceModel = executionState.getDatasourceModel();
-            if (null == datasourceModel) {
-                btnExec.setEnabled(false);
-            } else {
-                btnExec.setEnabled(true);
-            }
-        });
+        executionState.addListener(this::updateStateOfBtnExec);
+    }
+
+    private void updateStateOfBtnExec() {
+        final DatasourceModel datasourceModel = executionState.getDatasourceModel();
+        final boolean isLoading = executionState.getIsLoading();
+
+        btnExec.setEnabled(null != datasourceModel && !isLoading);
     }
 
     private void setHeightForComponent(Component comp, int height) {
@@ -263,7 +263,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
 
     @Override
     public void onLoadingStateChange(boolean isLoading) {
-        btnExec.setEnabled(!isLoading);
+        executionState.setIsLoading(isLoading);
         progressBar.setIndeterminate(isLoading);
         progressBar.setValue(isLoading ? 0 : 100);
         progressBar.setVisible(isLoading);

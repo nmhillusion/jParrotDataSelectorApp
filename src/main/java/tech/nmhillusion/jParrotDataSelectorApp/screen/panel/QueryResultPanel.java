@@ -70,10 +70,16 @@ public class QueryResultPanel extends JPanel {
         btnCopy.setEnabled(false);
         btnCopy.addActionListener(this::copyResultToClipboard);
         btnCopy.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        btnCopy.setCursor(
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        );
 
         btnExport.setEnabled(false);
         btnExport.addActionListener(this::exportResultToExcel);
         btnExport.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        btnExport.setCursor(
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        );
 
         resultActionBox.add(Box.createHorizontalGlue()); // Push subsequent components to the right
         resultActionBox.add(btnCopy);

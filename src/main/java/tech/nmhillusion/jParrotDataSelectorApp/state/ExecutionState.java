@@ -17,6 +17,7 @@ public class ExecutionState extends Stringeable {
     private final List<ExecutionStateListener> listeners = new ArrayList<>();
     private DatasourceModel datasourceModel;
     private String sqlData;
+    private boolean isLoading;
 
     public DatasourceModel getDatasourceModel() {
         return datasourceModel;
@@ -44,5 +45,15 @@ public class ExecutionState extends Stringeable {
 
     private void triggerListeners() {
         listeners.forEach(ExecutionStateListener::updated);
+    }
+
+    public boolean getIsLoading() {
+        return isLoading;
+    }
+
+    public ExecutionState setIsLoading(boolean loading) {
+        isLoading = loading;
+        triggerListeners();
+        return this;
     }
 }

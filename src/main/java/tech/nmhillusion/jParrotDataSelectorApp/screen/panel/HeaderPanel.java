@@ -66,6 +66,9 @@ public class HeaderPanel extends JPanel {
                 new Dimension(200, 20)
         );
         btnChangeDatasource.addActionListener(this::onClickChangeDatasource);
+        btnChangeDatasource.setCursor(
+                Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        );
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         add(
@@ -115,6 +118,7 @@ public class HeaderPanel extends JPanel {
                     .map(it -> {
                         final JButton btn = new JButton(it.getDataSourceName());
                         setFixedSizeOfButton(btn, jDialog.getWidth());
+                        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
                         btn.addMouseListener(new DoubleClickMouseListener() {
                             @Override
