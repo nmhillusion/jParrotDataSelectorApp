@@ -7,6 +7,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.HeaderPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.QueryResultPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.SqlEditorPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
 import tech.nmhillusion.n2mix.helper.database.query.ExtractResultToPage;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
@@ -36,7 +37,7 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
  * created date: 2025-05-10
  */
 @Neon
-public class MainFrame extends JPanel {
+public class MainFrame extends JPanel implements LoadingStateListener {
     private static final EmptyBorderSize EMPTY_BORDER_SIZE = new EmptyBorderSize(2, 5, 2, 5);
     private final ExecutionState executionState;
     private final HeaderPanel headerPanel;
@@ -124,7 +125,7 @@ public class MainFrame extends JPanel {
         {
             add(progressBar);
             setHeightForComponent(progressBar, 20);
-            setLoadingState(false);
+            onLoadingStateChange(false);
         }
 
         {
@@ -244,12 +245,12 @@ public class MainFrame extends JPanel {
 
             @Override
             protected void process(List<Void> chunks) {
-                setLoadingState(true);
+                onLoadingStateChange(true);
             }
 
             @Override
             protected void done() {
-                setLoadingState(false);
+                onLoadingStateChange(false);
             }
         };
 
@@ -258,7 +259,8 @@ public class MainFrame extends JPanel {
         return swingWorker.get();
     }
 
-    private void setLoadingState(boolean isLoading) {
+    @Override
+    public void onLoadingStateChange(boolean isLoading) {
         btnExec.setEnabled(!isLoading);
         progressBar.setIndeterminate(isLoading);
         progressBar.setValue(isLoading ? 0 : 100);
