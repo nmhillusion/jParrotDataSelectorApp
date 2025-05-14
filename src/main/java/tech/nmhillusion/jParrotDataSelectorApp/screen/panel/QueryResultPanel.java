@@ -189,7 +189,9 @@ public class QueryResultPanel extends JPanel {
 
     public void showResult(java.util.List<QueryResultModel> queryResultList) {
         final StringBuilder sb = new StringBuilder(
-                MessageFormat.format("Query result of {0} queries.<hr><br>", queryResultList.size())
+                1 == queryResultList.size()
+                        ? "Query result:<hr><br>"
+                        : MessageFormat.format("Query result of {0} queries:<hr><br>", queryResultList.size())
         );
 
         queryResultList.stream()
