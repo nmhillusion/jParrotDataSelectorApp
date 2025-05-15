@@ -198,11 +198,23 @@ public class QueryResultPanel extends JPanel {
         return sb;
     }
 
-    public void showResult(java.util.List<QueryResultModel> queryResultList) {
-        if (null == queryResultList || queryResultList.isEmpty()) {
+    public void showResult(java.util.List<QueryResultModel> queryResultList_) {
+        if (null == queryResultList_ || queryResultList_.isEmpty()) {
             resultTextArea.setText("No result");
             return;
         }
+
+        final java.util.List<QueryResultModel> queryResultList = queryResultList_
+                .stream()
+                .map(it -> {
+                    final String sqlText = it.sqlText();
+
+                    return new QueryResultModel(
+                            MessageFormat.format("{0};", sqlText)
+                            , it.dbExportDataModel()
+                    );
+                })
+                .toList();
 
         final StringBuilder sb = new StringBuilder(
                 1 == queryResultList.size()

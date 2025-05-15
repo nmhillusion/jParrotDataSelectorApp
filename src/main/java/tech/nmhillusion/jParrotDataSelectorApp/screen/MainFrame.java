@@ -196,7 +196,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
             final List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
                             sqlTextAll
                     ).split(";"))
-                    .map(it -> StringUtil.trimWithNull(it) + ";")
+                    .map(StringUtil::trimWithNull)
                     .filter(Predicate.not(StringValidator::isBlank))
                     .toList();
 
@@ -230,10 +230,10 @@ public class MainFrame extends JPanel implements LoadingStateListener {
                 }
             });
 
-            completableFuture.whenComplete((value, ex) -> {
+            completableFuture.whenComplete((resultList, ex) -> {
                 SwingUtilities.invokeLater(() -> {
                     queryResultPanel.showResult(
-                            value
+                            resultList
                     );
                 });
             });
