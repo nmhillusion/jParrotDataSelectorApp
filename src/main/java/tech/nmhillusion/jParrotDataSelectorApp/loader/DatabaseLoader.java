@@ -29,7 +29,7 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
  */
 @Neon
 public class DatabaseLoader {
-    private static final Pattern JDBC_URL_PATTERN = Pattern.compile("jdbc:(\\w+?)://.+?", Pattern.CASE_INSENSITIVE);
+    private static final Pattern JDBC_URL_PATTERN = Pattern.compile("jdbc:(\\w+?):.+?", Pattern.CASE_INSENSITIVE);
     private final Map<String, DatabaseExecutor> datasourceExecutorMap = new TreeMap<>();
 
     private <T> T getAppConfig(String configKey, Class<T> clazz2Cast) throws IOException {
