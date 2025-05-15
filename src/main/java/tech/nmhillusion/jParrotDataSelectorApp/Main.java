@@ -3,6 +3,7 @@ package tech.nmhillusion.jParrotDataSelectorApp;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.MainFrame;
+import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.neon_di.NeonEngine;
 
@@ -34,7 +35,7 @@ public class Main {
         } catch (Throwable ex) {
             JOptionPane.showMessageDialog(
                     null
-                    , "Error when init program [%s]: %s".formatted(ex.getClass().getSimpleName(), ex.getMessage())
+                    , new OptionDialogPane("Error when init program [%s]: %s".formatted(ex.getClass().getSimpleName(), ex.getMessage()))
                     , "Error"
                     , JOptionPane.ERROR_MESSAGE
             );
@@ -67,7 +68,9 @@ public class Main {
             getLogger(Main.class).error(ex);
             JOptionPane.showMessageDialog(
                     null
-                    , "Error when init program [%s]: %s".formatted(ex.getClass().getSimpleName(), ex.getMessage())
+                    , new OptionDialogPane(
+                            "Error when init program [%s]: %s".formatted(ex.getClass().getSimpleName(), ex.getMessage())
+                    )
                     , "Error"
                     , JOptionPane.ERROR_MESSAGE
             );

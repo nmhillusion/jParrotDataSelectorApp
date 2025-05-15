@@ -4,6 +4,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
+import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.HeaderPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.QueryResultPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.SqlEditorPanel;
@@ -225,7 +226,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
 
                 JOptionPane.showMessageDialog(
                         evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
-                        , "Error when connecting to database: " + ex.getMessage()
+                        , new OptionDialogPane("Error when connecting to database: " + ex.getMessage())
                         , "Error"
                         , JOptionPane.ERROR_MESSAGE
                 );
@@ -250,7 +251,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
             getLogger(this).error(ex);
             JOptionPane.showMessageDialog(
                     evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
-                    , "Error when executing sql: " + ex.getMessage()
+                    , new OptionDialogPane("Error when executing sql: " + ex.getMessage())
                     , "Error"
                     , JOptionPane.ERROR_MESSAGE
             );
@@ -258,7 +259,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
     }
 
     private List<QueryResultModel> doExecSqlQueries(List<String> sqlBlockList, DatabaseExecutor databaseExecutor) throws InterruptedException, ExecutionException {
-        final SwingWorker<List<QueryResultModel>, Void> swingWorker = new SwingWorker<>() {
+        final SwingWorker<List<QueryResultModel>, Throwable> swingWorker = new SwingWorker<>() {
             @Override
             protected List<QueryResultModel> doInBackground() throws Exception {
                 final List<QueryResultModel> queryResultList = new ArrayList<>();
@@ -287,15 +288,25 @@ public class MainFrame extends JPanel implements LoadingStateListener {
 //                    }
                 } catch (Throwable ex) {
                     getLogger(this).error(ex);
-                    throw new SQLException(ex);
+                    publish(new SQLException(ex));
                 }
 
                 return queryResultList;
             }
 
             @Override
-            protected void process(List<Void> chunks) {
-                onLoadingStateChange(true);
+            protected void process(List<Throwable> chunks) {
+                if (null != chunks && !chunks.isEmpty()) {
+                    onLoadingStateChange(false);
+                    JOptionPane.showMessageDialog(
+                            btnExec
+                            , new OptionDialogPane("Error when executing sql: " + chunks.getFirst().getMessage())
+                            , "Error"
+                            , JOptionPane.ERROR_MESSAGE
+                    );
+                } else {
+                    onLoadingStateChange(true);
+                }
             }
 
             @Override

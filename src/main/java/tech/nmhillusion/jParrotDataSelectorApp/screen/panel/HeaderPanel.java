@@ -4,6 +4,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DoubleClickMouseListener;
+import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
 import tech.nmhillusion.neon_di.annotation.Inject;
@@ -163,7 +164,7 @@ public class HeaderPanel extends JPanel {
         } catch (Throwable ex) {
             JOptionPane.showMessageDialog(
                     evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
-                    , "Error when selecting data source: " + ex.getMessage()
+                    , new OptionDialogPane("Error when selecting data source: " + ex.getMessage())
                     , "Error"
                     , JOptionPane.ERROR_MESSAGE
             );
@@ -189,7 +190,7 @@ public class HeaderPanel extends JPanel {
                 if (null != chunks && !chunks.isEmpty()) {
                     JOptionPane.showMessageDialog(
                             btnChangeDatasource
-                            , chunks.getFirst()
+                            , new OptionDialogPane("Error when connecting to data source: " + chunks.getFirst().getMessage())
                             , "Error"
                             , JOptionPane.ERROR_MESSAGE
                     );

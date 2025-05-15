@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.*;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
+import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
 import tech.nmhillusion.n2mix.helper.YamlReader;
@@ -261,7 +262,7 @@ public class QueryResultPanel extends JPanel {
     private void exportResultToExcel(ActionEvent evt) {
         try {
             loadingStateListener.onLoadingStateChange(true);
-            final SwingWorker<Path, Void> swingWorker = doExportResultToExcel(evt);
+            final SwingWorker<Path, Throwable> swingWorker = doExportResultToExcel(evt);
 
             executionState.setCurrentBackgroundWorker(swingWorker);
             swingWorker.execute();
@@ -269,15 +270,15 @@ public class QueryResultPanel extends JPanel {
             getLogger(this).error(ex);
             JOptionPane.showMessageDialog(
                     btnExport
-                    , "Error when export result: " + ex.getMessage()
+                    , new OptionDialogPane("Error when export result: " + ex.getMessage())
                     , "Error"
                     , JOptionPane.ERROR_MESSAGE
             );
         }
     }
 
-    private SwingWorker<Path, Void> doExportResultToExcel(ActionEvent evt) {
-        return new SwingWorker<Path, Void>() {
+    private SwingWorker<Path, Throwable> doExportResultToExcel(ActionEvent evt) {
+        return new SwingWorker<>() {
             @Override
             protected Path doInBackground() throws Exception {
                 try {
@@ -346,6 +347,18 @@ public class QueryResultPanel extends JPanel {
             }
 
             @Override
+            protected void process(List<Throwable> chunks) {
+                if (null != chunks && !chunks.isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                            btnExport
+                            , new OptionDialogPane("Error when export result: " + chunks.getFirst().getMessage())
+                            , "Error"
+                            , JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+
+            @Override
             protected void done() {
                 try {
                     loadingStateListener.onLoadingStateChange(false);
@@ -354,7 +367,7 @@ public class QueryResultPanel extends JPanel {
                     getLogger(this).error(ex);
                     JOptionPane.showMessageDialog(
                             btnExport
-                            , "Error when open folder: " + ex.getMessage()
+                            , new OptionDialogPane("Error when open folder: " + ex.getMessage())
                             , "Error"
                             , JOptionPane.ERROR_MESSAGE
                     );
