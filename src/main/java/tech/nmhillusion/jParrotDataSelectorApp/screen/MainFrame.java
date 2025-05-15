@@ -305,7 +305,6 @@ public class MainFrame extends JPanel implements LoadingStateListener {
     public void onLoadingStateChange(boolean isLoading) {
         executionState.setIsLoading(isLoading);
         progressBar.setIndeterminate(isLoading);
-        progressBar.setValue(isLoading ? 0 : 100);
         progressBar.setVisible(isLoading);
     }
 
