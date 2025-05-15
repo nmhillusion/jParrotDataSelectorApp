@@ -79,9 +79,9 @@ tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     from("src/main/resources").exclude(
-        "decompiler",
+        "output",
         "icon",
-        "scripts"
+        "config"
     )
 
     manifest {
