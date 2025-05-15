@@ -20,6 +20,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -141,7 +142,9 @@ public class QueryResultPanel extends JPanel {
 
             return;
         }
-        resultTextArea.select(0, resultTextArea.getText().length());
+
+        resultTextArea.requestFocusInWindow(FocusEvent.Cause.ACTIVATION);
+        resultTextArea.selectAll();
         resultTextArea.copy();
 
         JOptionPane.showMessageDialog(
@@ -214,8 +217,6 @@ public class QueryResultPanel extends JPanel {
         resultTextArea.setText(sb.toString());
 
         cachedQueryResultList = queryResultList;
-
-
     }
 
     private void updateStateOfActionButtons() {

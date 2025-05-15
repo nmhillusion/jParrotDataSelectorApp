@@ -272,10 +272,10 @@ public class MainFrame extends JPanel implements LoadingStateListener {
                         publish();
                     }
 
-                    {
-                        /// Mark: TEST: longer executing time
-                        Thread.sleep(10000);
-                    }
+//                    {
+//                        /// Mark: TEST: longer executing time
+//                        Thread.sleep(10000);
+//                    }
                 } catch (Throwable ex) {
                     getLogger(this).error(ex);
                     throw new SQLException(ex);
