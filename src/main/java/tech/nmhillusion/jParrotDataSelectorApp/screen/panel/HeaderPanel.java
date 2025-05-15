@@ -169,7 +169,7 @@ public class HeaderPanel extends JPanel {
     private void throwIfFailConnectionDS(DatasourceModel it) {
         loadingStateListener.onLoadingStateChange(true);
 
-        new SwingWorker<Boolean, Throwable>() {
+        final SwingWorker<Boolean, Throwable> swingWorker = new SwingWorker<>() {
             @Override
             protected Boolean doInBackground() throws Exception {
                 databaseLoader.checkConnection(it, ex -> {
@@ -196,7 +196,10 @@ public class HeaderPanel extends JPanel {
             protected void done() {
                 loadingStateListener.onLoadingStateChange(false);
             }
-        }.execute();
+        };
+
+        executionState.setCurrentBackgroundWorker(swingWorker);
+        swingWorker.execute();
     }
 
 }

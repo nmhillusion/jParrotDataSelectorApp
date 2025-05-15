@@ -58,11 +58,7 @@ public class QueryResultPanel extends JPanel {
 
         initComponents();
 
-        executionState.addListener(() -> {
-            final boolean isLoading = executionState.getIsLoading();
-            btnCopy.setEnabled(!isLoading);
-            btnExport.setEnabled(!isLoading);
-        });
+        executionState.addListener(this::updateStateOfActionButtons);
     }
 
     private <T> T getConfig(String configKey, Class<T> clazz2Cast) throws IOException {
@@ -200,6 +196,11 @@ public class QueryResultPanel extends JPanel {
     }
 
     public void showResult(java.util.List<QueryResultModel> queryResultList) {
+        if (null == queryResultList || queryResultList.isEmpty()) {
+            resultTextArea.setText("No result");
+            return;
+        }
+
         final StringBuilder sb = new StringBuilder(
                 1 == queryResultList.size()
                         ? "Query result:<hr><br>"
@@ -214,8 +215,14 @@ public class QueryResultPanel extends JPanel {
 
         cachedQueryResultList = queryResultList;
 
-        btnCopy.setEnabled(null != cachedQueryResultList && !cachedQueryResultList.isEmpty());
-        btnExport.setEnabled(null != cachedQueryResultList && !cachedQueryResultList.isEmpty());
+
+    }
+
+    private void updateStateOfActionButtons() {
+        final boolean resultAvailable = null != cachedQueryResultList && !cachedQueryResultList.isEmpty();
+        final boolean isLoading = executionState.getIsLoading();
+        btnCopy.setEnabled(!isLoading && resultAvailable);
+        btnExport.setEnabled(!isLoading && resultAvailable);
     }
 
     private void prepareOutputFolder() throws IOException {
@@ -233,7 +240,10 @@ public class QueryResultPanel extends JPanel {
     private void exportResultToExcel(ActionEvent evt) {
         try {
             loadingStateListener.onLoadingStateChange(true);
-            doExportResultToExcel(evt).execute();
+            final SwingWorker<Path, Void> swingWorker = doExportResultToExcel(evt);
+
+            executionState.setCurrentBackgroundWorker(swingWorker);
+            swingWorker.execute();
         } catch (Throwable ex) {
             getLogger(this).error(ex);
             JOptionPane.showMessageDialog(

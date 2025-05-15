@@ -45,6 +45,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
     private final QueryResultPanel queryResultPanel;
     private final DatabaseLoader databaseLoader;
     private final JButton btnExec = new JButton("Execute");
+    private final JButton btnStop = new JButton("Stop");
     private final JProgressBar progressBar = new JProgressBar();
 
     public MainFrame(@Inject ExecutionState executionState,
@@ -63,14 +64,16 @@ public class MainFrame extends JPanel implements LoadingStateListener {
 
         initComponents();
 
-        executionState.addListener(this::updateStateOfBtnExec);
+        executionState.addListener(this::updateStateOfActonBox);
     }
 
-    private void updateStateOfBtnExec() {
+    private void updateStateOfActonBox() {
         final DatasourceModel datasourceModel = executionState.getDatasourceModel();
+        final SwingWorker<?, ?> currentBackgroundWorker = executionState.getCurrentBackgroundWorker();
         final boolean isLoading = executionState.getIsLoading();
 
         btnExec.setEnabled(null != datasourceModel && !isLoading);
+        btnStop.setEnabled(null != currentBackgroundWorker && isLoading);
     }
 
     private void setHeightForComponent(Component comp, int height) {
@@ -115,7 +118,18 @@ public class MainFrame extends JPanel implements LoadingStateListener {
             btnExec.setPreferredSize(new Dimension(200, 30));
             btnExec.addActionListener(this::onClickExecSql);
             btnExec.setAlignmentX(Component.RIGHT_ALIGNMENT);
+            btnExec.setCursor(
+                    Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            );
             btnExecPanel.add(btnExec);
+
+            btnStop.setPreferredSize(new Dimension(80, 30));
+            btnStop.addActionListener(this::onClickStopSql);
+            btnStop.setAlignmentX(Component.RIGHT_ALIGNMENT);
+            btnStop.setCursor(
+                    Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            );
+            btnExecPanel.add(btnStop);
 
             add(
                     btnExecPanel
@@ -140,6 +154,26 @@ public class MainFrame extends JPanel implements LoadingStateListener {
                     , EMPTY_BORDER_SIZE.right()
             ));
             queryResultPanel.setLoadingStateListener(this);
+        }
+    }
+
+    private void onClickStopSql(ActionEvent evt) {
+        final SwingWorker<?, ?> currentBackgroundWorker = executionState.getCurrentBackgroundWorker();
+        if (null == currentBackgroundWorker) {
+            JOptionPane.showMessageDialog(
+                    evt.getSource() instanceof JButton ? (JButton) evt.getSource() : this
+                    , "No background worker to stop"
+                    , "Warning"
+                    , JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        if (currentBackgroundWorker.cancel(true)) {
+            if (currentBackgroundWorker.isCancelled()) {
+                executionState.setCurrentBackgroundWorker(null);
+            }
         }
     }
 
@@ -237,6 +271,11 @@ public class MainFrame extends JPanel implements LoadingStateListener {
 
                         publish();
                     }
+
+                    {
+                        /// Mark: TEST: longer executing time
+                        Thread.sleep(10000);
+                    }
                 } catch (Throwable ex) {
                     getLogger(this).error(ex);
                     throw new SQLException(ex);
@@ -256,6 +295,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
             }
         };
 
+        executionState.setCurrentBackgroundWorker(swingWorker);
         swingWorker.execute();
 
         return swingWorker.get();

@@ -4,6 +4,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.n2mix.type.Stringeable;
 import tech.nmhillusion.neon_di.annotation.Neon;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class ExecutionState extends Stringeable {
     private DatasourceModel datasourceModel;
     private String sqlData;
     private boolean isLoading;
+    private SwingWorker<?, ?> currentBackgroundWorker;
 
     public DatasourceModel getDatasourceModel() {
         return datasourceModel;
@@ -53,6 +55,16 @@ public class ExecutionState extends Stringeable {
 
     public ExecutionState setIsLoading(boolean loading) {
         isLoading = loading;
+        triggerListeners();
+        return this;
+    }
+
+    public SwingWorker<?, ?> getCurrentBackgroundWorker() {
+        return currentBackgroundWorker;
+    }
+
+    public ExecutionState setCurrentBackgroundWorker(SwingWorker<?, ?> currentBackgroundWorker) {
+        this.currentBackgroundWorker = currentBackgroundWorker;
         triggerListeners();
         return this;
     }
