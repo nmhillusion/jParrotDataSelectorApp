@@ -1,9 +1,12 @@
 package tech.nmhillusion.jParrotDataSelectorApp.helper;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -42,5 +45,14 @@ public abstract class ViewHelper {
             ancestor = ancestor.getParent();
         }
         return (JFrame) ancestor;
+    }
+
+    public static Image getIconForButton(String resourcePath, int width, int height) throws IOException {
+        final BufferedImage rawImage = ImageIO.read(
+                Files.newInputStream(
+                        PathHelper.getPathOfResource(resourcePath)
+                )
+        );
+        return rawImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
     }
 }

@@ -1,5 +1,6 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen;
 
+import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
@@ -84,7 +85,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
         comp.setMinimumSize(preferredSize);
     }
 
-    private void initComponents() {
+    private void initComponents() throws IOException {
         {
             add(
                     headerPanel
@@ -115,6 +116,10 @@ public class MainFrame extends JPanel implements LoadingStateListener {
         {
             final JPanel btnExecPanel = new JPanel(new FlowLayout());
 
+            btnExec.setIcon(new ImageIcon(
+                    ViewHelper.getIconForButton("icon/exec-icon.png", 15, 15)
+            ));
+            btnExec.setIconTextGap(5);
             btnExec.setPreferredSize(new Dimension(200, 30));
             btnExec.addActionListener(this::onClickExecSql);
             btnExec.setAlignmentX(Component.RIGHT_ALIGNMENT);
@@ -123,6 +128,10 @@ public class MainFrame extends JPanel implements LoadingStateListener {
             );
             btnExecPanel.add(btnExec);
 
+            btnStop.setIcon(new ImageIcon(
+                    ViewHelper.getIconForButton("icon/stop-icon.png", 15, 15)
+            ));
+            btnStop.setIconTextGap(5);
             btnStop.setPreferredSize(new Dimension(80, 30));
             btnStop.addActionListener(this::onClickStopSql);
             btnStop.setAlignmentX(Component.RIGHT_ALIGNMENT);

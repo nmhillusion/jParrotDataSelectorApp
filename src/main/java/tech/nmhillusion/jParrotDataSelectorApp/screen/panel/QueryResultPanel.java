@@ -69,7 +69,11 @@ public class QueryResultPanel extends JPanel {
         }
     }
 
-    private void buildActionBoxButtons(JPanel resultActionBox) {
+    private void buildActionBoxButtons(JPanel resultActionBox) throws IOException {
+        btnCopy.setIcon(new ImageIcon(
+                ViewHelper.getIconForButton("icon/copy-icon.png", 15, 15)
+        ));
+        btnCopy.setIconTextGap(5);
         btnCopy.setEnabled(false);
         btnCopy.addActionListener(this::copyResultToClipboard);
         btnCopy.setAlignmentX(Component.RIGHT_ALIGNMENT);
@@ -77,6 +81,10 @@ public class QueryResultPanel extends JPanel {
                 Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         );
 
+        btnExport.setIcon(new ImageIcon(
+                ViewHelper.getIconForButton("icon/export-excel-icon.png", 15, 15)
+        ));
+        btnExport.setIconTextGap(5);
         btnExport.setEnabled(false);
         btnExport.addActionListener(this::exportResultToExcel);
         btnExport.setAlignmentX(Component.RIGHT_ALIGNMENT);
@@ -89,7 +97,7 @@ public class QueryResultPanel extends JPanel {
         resultActionBox.add(btnExport);
     }
 
-    private void initComponents() {
+    private void initComponents() throws IOException {
         int rowIdx = 0;
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;

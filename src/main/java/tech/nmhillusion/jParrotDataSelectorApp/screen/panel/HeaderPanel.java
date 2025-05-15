@@ -57,13 +57,17 @@ public class HeaderPanel extends JPanel {
                 new JLabel("Data Source:"), gridBagConstraints
         );
 
+        btnChangeDatasource.setIcon(new ImageIcon(
+                ViewHelper.getIconForButton("icon/database-icon.png", 12, 12)
+        ));
+        btnChangeDatasource.setIconTextGap(5);
         btnChangeDatasource.setBorder(
                 BorderFactory.createEtchedBorder(
                         EtchedBorder.LOWERED
                 )
         );
         btnChangeDatasource.setPreferredSize(
-                new Dimension(200, 20)
+                new Dimension(200, 25)
         );
         btnChangeDatasource.addActionListener(this::onClickChangeDatasource);
         btnChangeDatasource.setCursor(
