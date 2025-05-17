@@ -1,5 +1,7 @@
 package tech.nmhillusion.jParrotDataSelectorApp.helper;
 
+import tech.nmhillusion.n2mix.util.StringUtil;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -57,7 +59,7 @@ public abstract class ViewHelper {
     }
 
     public static boolean isMacOS() {
-        String osName = System.getProperty("os.name").toLowerCase();
+        String osName = StringUtil.trimWithNull(System.getProperty("os.name")).toLowerCase();
         return osName.contains("mac") || osName.contains("darwin");
     }
 }
