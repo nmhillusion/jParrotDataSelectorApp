@@ -1,6 +1,7 @@
 package tech.nmhillusion.jParrotDataSelectorApp;
 
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
+import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.MainFrame;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
@@ -80,7 +81,13 @@ public class Main {
 
     private static void setLookAndFeelUI() {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            final String lookAndFeelClassName = !ViewHelper.isMacOS()
+                    ? UIManager.getSystemLookAndFeelClassName()
+                    : "javax.swing.plaf.nimbus.NimbusLookAndFeel";
+
+            UIManager.setLookAndFeel(
+                    lookAndFeelClassName
+            );
         } catch (Exception e) {
             getLogger(Main.class).error(e);
         }

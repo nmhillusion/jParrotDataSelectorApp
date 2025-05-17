@@ -55,4 +55,9 @@ public abstract class ViewHelper {
         );
         return rawImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
     }
+
+    public static boolean isMacOS() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        return osName.contains("mac") || osName.contains("darwin");
+    }
 }
