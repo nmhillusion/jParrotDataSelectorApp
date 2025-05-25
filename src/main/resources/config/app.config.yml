@@ -1,6 +1,6 @@
 query:
-  #  maxRows: 10000
-  maxRows: 22
+  #  maxRows: 22
+  maxRows: 10000
 
 showResult:
   maxRows: 20
