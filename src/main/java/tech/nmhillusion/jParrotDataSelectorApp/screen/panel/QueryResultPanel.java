@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
@@ -48,12 +49,14 @@ public class QueryResultPanel extends JPanel {
     private final JButton btnExport = new JButton("Export Excels");
     private final int maxRows;
     private final Path outputPath = PathHelper.getPathOfResource("output");
+    private final int MAX_ROWS_OF_QUERY;
     private java.util.List<QueryResultModel> cachedQueryResultList;
     private LoadingStateListener loadingStateListener;
 
     public QueryResultPanel(@Inject ExecutionState executionState) throws IOException {
         this.executionState = executionState;
         maxRows = getConfig("showResult.maxRows", Integer.class);
+        MAX_ROWS_OF_QUERY = getConfig("query.maxRows", Integer.class);
 
 //        setBackground(Color.green);
         setLayout(new GridBagLayout());
@@ -176,11 +179,17 @@ public class QueryResultPanel extends JPanel {
         );
 
         final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
-        final List<List<String>> allRows = dbExportDataModel.getValues();
+        final List<List<String>> allRowsInResultModel = dbExportDataModel.getValues();
 
-        if (maxRows < allRows.size()) {
-            sb.append("<p><i>(Only show first ").append(maxRows).append(" rows)</i></p>");
+        sb.append("<p> Total rows: ").append(queryResultModel.totalRows()).append(". ");
+        if (MAX_ROWS_OF_QUERY < queryResultModel.totalRows()) {
+            sb.append("<i>(Only query first ").append(MAX_ROWS_OF_QUERY).append(" rows)</i>");
         }
+        if (maxRows < allRowsInResultModel.size()) {
+            sb.append("<i>(Only show first ").append(maxRows).append(" rows)</i>");
+        }
+        sb.append("</p>");
+
         sb.append("<table><thead>");
         final String headerRow = String.join("", dbExportDataModel
                 .getHeader()
@@ -191,7 +200,7 @@ public class QueryResultPanel extends JPanel {
 
         sb.append(headerRow).append("</thead><tbody>");
 
-        final List<List<String>> shownRows = allRows.subList(0, Math.min(maxRows, allRows.size()));
+        final List<List<String>> shownRows = allRowsInResultModel.subList(0, Math.min(maxRows, allRowsInResultModel.size()));
 
         for (final java.util.List<String> row : shownRows) {
             sb.append("<tr>");
@@ -296,12 +305,20 @@ public class QueryResultPanel extends JPanel {
                         final QueryResultModel queryResultModel = cachedQueryResultList.get(queryIdx);
                         final DbExportDataModel dbExportDataModel = queryResultModel.dbExportDataModel();
 
+                        final StringBuilder queryResultMetaData = new StringBuilder("Total rows: ").append(queryResultModel.totalRows());
+                        if (MAX_ROWS_OF_QUERY < queryResultModel.totalRows()) {
+                            queryResultMetaData.append(" (Only query first ").append(MAX_ROWS_OF_QUERY).append(" rows)");
+                        }
+
                         final byte[] queryData = new ExcelWriteHelper()
                                 .addSheetData(
                                         new BasicExcelDataModel()
                                                 .setHeaders(
                                                         List.of(
-                                                                dbExportDataModel.getHeader()
+                                                                Collections.singletonList(
+                                                                        queryResultMetaData.toString()
+                                                                )
+                                                                , dbExportDataModel.getHeader()
                                                         )
                                                 )
                                                 .setBodyData(
