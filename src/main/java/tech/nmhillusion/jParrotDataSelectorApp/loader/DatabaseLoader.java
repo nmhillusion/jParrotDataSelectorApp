@@ -193,7 +193,7 @@ public class DatabaseLoader {
 
     private long countRowsOfQuery(DatabaseExecutor databaseExecutor, String sqlText) throws Throwable {
         final String countQuery = MessageFormat.format(
-                "select count(*) from ( {0} ) as sub"
+                "select count(*) from ({0}) as subquery"
                 , sqlText
         );
 
