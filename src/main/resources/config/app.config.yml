@@ -1,3 +1,7 @@
+query:
+  #  maxRows: 10000
+  maxRows: 22
+
 showResult:
   maxRows: 20
 

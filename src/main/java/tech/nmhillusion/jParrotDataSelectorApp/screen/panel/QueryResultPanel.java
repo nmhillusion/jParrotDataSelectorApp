@@ -220,6 +220,7 @@ public class QueryResultPanel extends JPanel {
 
                     return new QueryResultModel(
                             MessageFormat.format("{0};", sqlText)
+                            , it.totalRows()
                             , it.dbExportDataModel()
                     );
                 })

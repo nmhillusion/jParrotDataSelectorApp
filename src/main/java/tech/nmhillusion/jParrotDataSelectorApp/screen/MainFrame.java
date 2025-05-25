@@ -11,8 +11,6 @@ import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.SqlEditorPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
-import tech.nmhillusion.n2mix.helper.database.query.ExtractResultToPage;
-import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 import tech.nmhillusion.n2mix.util.StringUtil;
 import tech.nmhillusion.n2mix.validator.StringValidator;
 import tech.nmhillusion.neon_di.annotation.Inject;
@@ -22,7 +20,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -234,7 +231,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
 
             final CompletableFuture<List<QueryResultModel>> completableFuture = CompletableFuture.supplyAsync(() -> {
                 try {
-                    return doExecSqlQueries(sqlBlockList, databaseExecutor);
+                    return doExecSqlQueries(datasourceModel, databaseExecutor, sqlBlockList);
                 } catch (InterruptedException | ExecutionException e) {
                     throw new RuntimeException(e);
                 }
@@ -258,7 +255,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
         }
     }
 
-    private List<QueryResultModel> doExecSqlQueries(List<String> sqlBlockList, DatabaseExecutor databaseExecutor) throws InterruptedException, ExecutionException {
+    private List<QueryResultModel> doExecSqlQueries(DatasourceModel datasourceModel, DatabaseExecutor databaseExecutor, List<String> sqlBlockList) throws InterruptedException, ExecutionException {
         final SwingWorker<List<QueryResultModel>, Throwable> swingWorker = new SwingWorker<>() {
             @Override
             protected List<QueryResultModel> doInBackground() throws Exception {
@@ -270,14 +267,13 @@ public class MainFrame extends JPanel implements LoadingStateListener {
                         publish();
                         getLogger(this).info("exec sql: {}", sqlText);
 
-                        final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
-                                conn.doReturningPreparedStatement(sqlText, preparedStatement_ -> {
-                                    final ResultSet resultSet = preparedStatement_.executeQuery();
-
-                                    return ExtractResultToPage.buildDbExportDataModel(resultSet);
-                                }));
-
-                        queryResultList.add(new QueryResultModel(sqlText, dbExportDataModel));
+                        queryResultList.add(
+                                databaseLoader.execSqlQuery(
+                                        datasourceModel
+                                        , databaseExecutor
+                                        , sqlText
+                                )
+                        );
 
                         publish();
                     }

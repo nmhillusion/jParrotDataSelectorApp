@@ -1,13 +1,17 @@
 package tech.nmhillusion.jParrotDataSelectorApp.loader;
 
+import tech.nmhillusion.jParrotDataSelectorApp.constant.DbNameType;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
+import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.n2mix.constant.CommonConfigDataSourceValue;
 import tech.nmhillusion.n2mix.helper.YamlReader;
 import tech.nmhillusion.n2mix.helper.database.config.DataSourceProperties;
 import tech.nmhillusion.n2mix.helper.database.config.DatabaseConfigHelper;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseHelper;
+import tech.nmhillusion.n2mix.helper.database.query.ExtractResultToPage;
+import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 import tech.nmhillusion.n2mix.type.function.VoidFunction;
 import tech.nmhillusion.neon_di.annotation.Neon;
 
@@ -17,6 +21,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -31,6 +37,11 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 public class DatabaseLoader {
     private static final Pattern JDBC_URL_PATTERN = Pattern.compile("jdbc:(\\w+?):.+?", Pattern.CASE_INSENSITIVE);
     private final Map<String, DatabaseExecutor> datasourceExecutorMap = new TreeMap<>();
+    private final int MAX_ROWS_OF_QUERY;
+
+    public DatabaseLoader() throws IOException {
+        MAX_ROWS_OF_QUERY = getAppConfig("query.maxRows", Integer.class);
+    }
 
     private <T> T getAppConfig(String configKey, Class<T> clazz2Cast) throws IOException {
         final Path configPath = PathHelper.getPathOfResource("config/app.config.yml");
@@ -39,7 +50,7 @@ public class DatabaseLoader {
         }
     }
 
-    private Optional<String> getDbTypeNameByJdbcUrl(String jdbcUrl) {
+    private Optional<DbNameType> getDbTypeNameByJdbcUrl(String jdbcUrl) {
         if (jdbcUrl == null) {
             return Optional.empty();
         }
@@ -52,17 +63,19 @@ public class DatabaseLoader {
 
         final String dbTypeName = matcher.group(1);
 
-        return Optional.ofNullable(dbTypeName);
+        return Optional.ofNullable(
+                DbNameType.from(dbTypeName)
+        );
     }
 
     private Optional<CommonConfigDataSourceValue.DataSourceConfig> getDataSourceConfigByJdbcUrl(String jdbcUrl) {
-        final Optional<String> dbTypeNameOpt = getDbTypeNameByJdbcUrl(jdbcUrl);
+        final Optional<DbNameType> dbTypeNameOpt = getDbTypeNameByJdbcUrl(jdbcUrl);
 
         return dbTypeNameOpt.flatMap(dbTypeName ->
-                switch (dbTypeName.toLowerCase()) {
-                    case "mysql" -> Optional.of(CommonConfigDataSourceValue.MYSQL_DATA_SOURCE_CONFIG);
-                    case "oracle" -> Optional.of(CommonConfigDataSourceValue.ORACLE_DATA_SOURCE_CONFIG);
-                    case "sqlserver" -> Optional.of(CommonConfigDataSourceValue.SQL_SERVER_DATA_SOURCE_CONFIG);
+                switch (dbTypeName) {
+                    case MY_SQL -> Optional.of(CommonConfigDataSourceValue.MYSQL_DATA_SOURCE_CONFIG);
+                    case ORACLE -> Optional.of(CommonConfigDataSourceValue.ORACLE_DATA_SOURCE_CONFIG);
+                    case SQL_SERVER -> Optional.of(CommonConfigDataSourceValue.SQL_SERVER_DATA_SOURCE_CONFIG);
                     default -> throw new IllegalStateException("Unexpected value: " + jdbcUrl);
                 }
         );
@@ -161,12 +174,12 @@ public class DatabaseLoader {
                 throw new IllegalStateException("databaseExecutor is null");
             }
 
-            final Optional<String> dbTypeNameOpt = getDbTypeNameByJdbcUrl(datasourceModel.getJdbcUrl());
+            final Optional<DbNameType> dbTypeNameOpt = getDbTypeNameByJdbcUrl(datasourceModel.getJdbcUrl());
             if (dbTypeNameOpt.isEmpty()) {
                 throw new IllegalStateException("Database TypeName is empty");
             }
 
-            final String testConnectionQuery = getAppConfig("database-validation." + dbTypeNameOpt.get(), String.class);
+            final String testConnectionQuery = getAppConfig("database-validation." + dbTypeNameOpt.get().getValue(), String.class);
             getLogger(this).info("testConnectionQuery[{}]: {}", dbTypeNameOpt.get(), testConnectionQuery);
 
             databaseExecutor.doWork(conn -> {
@@ -177,4 +190,92 @@ public class DatabaseLoader {
             exceptionCallback.apply(ex);
         }
     }
+
+    private long countRowsOfQuery(DatabaseExecutor databaseExecutor, String sqlText) throws Throwable {
+        final String countQuery = MessageFormat.format(
+                "select count(*) from ( {0} ) as sub"
+                , sqlText
+        );
+
+        getLogger(this).info("countQuery: {}", countQuery);
+
+        return databaseExecutor.doReturningWork(conn ->
+                conn.doReturningPreparedStatement(countQuery, preparedStatement_ -> {
+                    final ResultSet resultSet = preparedStatement_.executeQuery();
+
+                    if (resultSet.next()) {
+                        return resultSet.getLong(1);
+                    }
+
+                    return 0L;
+                })
+        );
+    }
+
+    private String wrapQueryWithLimitRow(DatasourceModel datasourceModel, String sqlText) {
+        final Optional<DbNameType> dbTypeName = getDbTypeNameByJdbcUrl(datasourceModel.getJdbcUrl());
+        if (dbTypeName.isEmpty()) {
+            getLogger(this).error("Cannot get dbTypeName");
+            return sqlText;
+        }
+
+        return switch (dbTypeName.get()) {
+            case ORACLE -> MessageFormat.format(
+                    """
+                            select *
+                            from ({0}) as subquery
+                            where rownum <= {1}
+                            """
+                    , sqlText
+                    , MAX_ROWS_OF_QUERY
+            );
+
+            case SQL_SERVER -> MessageFormat.format(
+                    """
+                            select top {0} *
+                            from ({1}) as subquery
+                            """
+                    , MAX_ROWS_OF_QUERY
+                    , sqlText
+            );
+
+            case MY_SQL -> MessageFormat.format(
+                    """
+                            select *
+                            from ({0}) as subquery
+                            limit {1}
+                            """
+                    , sqlText
+                    , MAX_ROWS_OF_QUERY
+            );
+
+            default -> sqlText;
+        };
+    }
+
+    public QueryResultModel execSqlQuery(DatasourceModel datasourceModel, DatabaseExecutor databaseExecutor, String sqlText) throws Throwable {
+        final long totalRows = countRowsOfQuery(databaseExecutor, sqlText);
+        String formalSqlText;
+
+        if (totalRows > MAX_ROWS_OF_QUERY) {
+            formalSqlText = wrapQueryWithLimitRow(datasourceModel, sqlText);
+        } else {
+            formalSqlText = sqlText;
+        }
+
+        getLogger(this).info("formal exec sql: {}", formalSqlText);
+        final DbExportDataModel dbExportDataModel = databaseExecutor.doReturningWork(conn ->
+                conn.doReturningPreparedStatement(formalSqlText, preparedStatement_ -> {
+                    final ResultSet resultSet = preparedStatement_.executeQuery();
+
+                    return ExtractResultToPage.buildDbExportDataModel(resultSet);
+                }));
+
+        return new QueryResultModel(
+                sqlText
+                , totalRows
+                , dbExportDataModel
+        );
+    }
+
 }

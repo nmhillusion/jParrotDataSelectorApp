@@ -39,10 +39,10 @@ public class SqlEditorPanel extends JPanel {
 
         this.sqlTextArea = new JTextArea();
         sqlTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
-        /// Mark: TEST: default SQL to test
-//        sqlTextArea.setText(
-//                "SELECT * FROM t_user;\nSELECT * FROM t_user tu \nwhere tu.enabled = 1\norder by tu.username\n;"
-//        );
+        //-- Mark: TEST: default SQL to test
+        sqlTextArea.setText(
+                "SELECT * FROM t_user;\nSELECT * FROM t_user tu \nwhere tu.enabled = 1\norder by tu.username\n;"
+        );
         sqlTextArea.setLineWrap(false);
         sqlTextArea.setRows(18);
 
