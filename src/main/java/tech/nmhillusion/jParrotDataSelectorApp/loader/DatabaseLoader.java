@@ -13,6 +13,7 @@ import tech.nmhillusion.n2mix.helper.database.query.DatabaseHelper;
 import tech.nmhillusion.n2mix.helper.database.query.ExtractResultToPage;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
 import tech.nmhillusion.n2mix.type.function.VoidFunction;
+import tech.nmhillusion.n2mix.util.StringUtil;
 import tech.nmhillusion.neon_di.annotation.Neon;
 
 import javax.sql.DataSource;
@@ -191,11 +192,45 @@ public class DatabaseLoader {
         }
     }
 
-    private long countRowsOfQuery(DatabaseExecutor databaseExecutor, String sqlText) throws Throwable {
-        final String countQuery = MessageFormat.format(
-                "select count(*) from ({0}) as subquery"
-                , sqlText
-        );
+    private long countRowsOfQuery(DatasourceModel datasourceModel, DatabaseExecutor databaseExecutor, String sqlText) throws Throwable {
+        final Optional<DbNameType> dbTypeName = getDbTypeNameByJdbcUrl(datasourceModel.getJdbcUrl());
+        if (dbTypeName.isEmpty()) {
+            throw new IllegalArgumentException("Database TypeName is empty");
+        }
+
+        final String countQuery = switch (dbTypeName.get()) {
+            case ORACLE -> MessageFormat.format(
+                    """
+                            select count(*)
+                            from ({0}) subquery
+                            """
+                    , sqlText
+            );
+
+            case SQL_SERVER -> MessageFormat.format(
+                    """
+                            select count(*)
+                            from ({0}) as subquery
+                            """
+                    , sqlText
+            );
+
+            case MY_SQL -> MessageFormat.format(
+                    """
+                            select count(*)
+                            from ({0}) as subquery
+                            """
+                    , sqlText
+            );
+
+            default -> MessageFormat.format( // A reasonable default for other DBs
+                    """
+                            select count(*)
+                            from ({0}) as subquery
+                            """
+                    , sqlText
+            );
+        };
 
         getLogger(this).info("countQuery: {}", countQuery);
 
@@ -219,15 +254,16 @@ public class DatabaseLoader {
             return sqlText;
         }
 
+        final String maxRowsText = StringUtil.trimWithNull(MAX_ROWS_OF_QUERY);
         return switch (dbTypeName.get()) {
             case ORACLE -> MessageFormat.format(
                     """
                             select *
-                            from ({0}) as subquery
-                            where rownum <= {1}
+                            from ({0})
+                            fetch next {1} rows only
                             """
                     , sqlText
-                    , MAX_ROWS_OF_QUERY
+                    , maxRowsText
             );
 
             case SQL_SERVER -> MessageFormat.format(
@@ -235,7 +271,7 @@ public class DatabaseLoader {
                             select top {0} *
                             from ({1}) as subquery
                             """
-                    , MAX_ROWS_OF_QUERY
+                    , maxRowsText
                     , sqlText
             );
 
@@ -246,7 +282,7 @@ public class DatabaseLoader {
                             limit {1}
                             """
                     , sqlText
-                    , MAX_ROWS_OF_QUERY
+                    , maxRowsText
             );
 
             default -> sqlText;
@@ -254,7 +290,7 @@ public class DatabaseLoader {
     }
 
     public QueryResultModel execSqlQuery(DatasourceModel datasourceModel, DatabaseExecutor databaseExecutor, String sqlText) throws Throwable {
-        final long totalRows = countRowsOfQuery(databaseExecutor, sqlText);
+        final long totalRows = countRowsOfQuery(datasourceModel, databaseExecutor, sqlText);
         String formalSqlText;
 
         if (totalRows > MAX_ROWS_OF_QUERY) {
