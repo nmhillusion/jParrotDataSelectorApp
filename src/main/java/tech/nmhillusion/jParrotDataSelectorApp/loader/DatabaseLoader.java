@@ -260,7 +260,7 @@ public class DatabaseLoader {
                     """
                             select *
                             from ({0})
-                            fetch next {1} rows only
+                            fetch first {1} rows only
                             """
                     , sqlText
                     , maxRowsText
