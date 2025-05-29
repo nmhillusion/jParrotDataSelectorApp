@@ -3,7 +3,6 @@ package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
-import tech.nmhillusion.jParrotDataSelectorApp.model.DoubleClickMouseListener;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
@@ -14,7 +13,6 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.List;
 
@@ -125,14 +123,11 @@ public class HeaderPanel extends JPanel {
                         setFixedSizeOfButton(btn, jDialog.getWidth());
                         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-                        btn.addMouseListener(new DoubleClickMouseListener() {
-                            @Override
-                            public void onDoubleClick(MouseEvent e) {
-                                throwIfFailConnectionDS(it);
+                        btn.addActionListener(btnEvt -> {
+                            throwIfFailConnectionDS(it);
 
-                                executionState.setDatasourceModel(it);
-                                jDialog.dispose();
-                            }
+                            executionState.setDatasourceModel(it);
+                            jDialog.dispose();
                         });
                         return btn;
                     })
