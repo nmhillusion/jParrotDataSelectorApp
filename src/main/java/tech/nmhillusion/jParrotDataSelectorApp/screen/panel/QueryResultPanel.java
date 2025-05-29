@@ -47,16 +47,34 @@ public class QueryResultPanel extends JPanel {
     private final JEditorPane resultTextArea = new JEditorPane();
     private final JButton btnCopy = new JButton("Copy");
     private final JButton btnExport = new JButton("Export Excels");
-    private final int maxRows;
+    private final ShowResultProperty showResultProperty;
     private final Path outputPath = PathHelper.getPathOfResource("output");
     private final int MAX_ROWS_OF_QUERY;
+    private final String COLUMN_MORE_SIGN = "...";
     private java.util.List<QueryResultModel> cachedQueryResultList;
     private LoadingStateListener loadingStateListener;
 
     public QueryResultPanel(@Inject ExecutionState executionState) throws IOException {
         this.executionState = executionState;
-        maxRows = getConfig("showResult.maxRows", Integer.class);
+
+        showResultProperty = new ShowResultProperty(
+                getConfig("showResult.maxRows", Integer.class)
+                , getConfig("showResult.maxColumns", Integer.class)
+        );
+
+        if (showResultProperty.maxRows() <= 0) {
+            throw new IllegalArgumentException("showResult.maxRows must be greater than 0");
+        }
+
+        if (showResultProperty.maxColumns() <= 1) {
+            throw new IllegalArgumentException("showResult.maxColumns must be greater than 1");
+        }
+
         MAX_ROWS_OF_QUERY = getConfig("query.maxRows", Integer.class);
+
+        if (MAX_ROWS_OF_QUERY <= 0) {
+            throw new IllegalArgumentException("query.maxRows must be greater than 0");
+        }
 
 //        setBackground(Color.green);
         setLayout(new GridBagLayout());
@@ -167,6 +185,21 @@ public class QueryResultPanel extends JPanel {
         );
     }
 
+    private List<String> minimalizeColumnsToDisplay(List<String> columns) {
+        if (null == columns || columns.isEmpty()) {
+            throw new IllegalArgumentException("columns cannot be null or empty");
+        }
+
+        if (showResultProperty.maxColumns() >= columns.size()) {
+            return columns;
+        }
+
+        final List<String> minimalizedColumns = columns.subList(0, showResultProperty.maxColumns() - 1);
+        minimalizedColumns.add(COLUMN_MORE_SIGN);
+
+        return minimalizedColumns;
+    }
+
     private StringBuilder showEachResult(QueryResultModel queryResultModel) {
         final StringBuilder sb = new StringBuilder();
 
@@ -185,28 +218,31 @@ public class QueryResultPanel extends JPanel {
         if (MAX_ROWS_OF_QUERY < queryResultModel.totalRows()) {
             sb.append("<i>(Only query first ").append(MAX_ROWS_OF_QUERY).append(" rows)</i>");
         }
-        if (maxRows < allRowsInResultModel.size()) {
-            sb.append("<i>(Only show first ").append(maxRows).append(" rows)</i>");
+        if (showResultProperty.maxRows() < allRowsInResultModel.size()) {
+            sb.append("<i>(Only show first ").append(showResultProperty.maxRows()).append(" rows)</i>");
         }
         sb.append("</p>");
 
         sb.append("<table><thead>");
-        final String headerRow = String.join("", dbExportDataModel
-                .getHeader()
-                .stream()
-                .map(it -> "<th style='border: solid 1px #eee;'>" + it + "</th>")
-                .toList()
+        final String headerRow = String.join("",
+                minimalizeColumnsToDisplay(dbExportDataModel.getHeader())
+                        .stream()
+                        .map(it -> "<th style='border: solid 1px #eee;'>" + it + "</th>")
+                        .toList()
         );
 
         sb.append(headerRow).append("</thead><tbody>");
 
-        final List<List<String>> shownRows = allRowsInResultModel.subList(0, Math.min(maxRows, allRowsInResultModel.size()));
+        final List<List<String>> shownRows = allRowsInResultModel.subList(0, Math.min(showResultProperty.maxRows(), allRowsInResultModel.size()));
 
         for (final java.util.List<String> row : shownRows) {
             sb.append("<tr>");
-            sb.append(String.join("", row.stream()
-                    .map(it -> "<td style='border: solid 1px #eee;'>" + it + "</td>")
-                    .toList())
+            sb.append(String.join("",
+                            minimalizeColumnsToDisplay(row)
+                                    .stream()
+                                    .map(it -> "<td style='border: solid 1px #eee;'>" + it + "</td>")
+                                    .toList()
+                    )
             );
             sb.append("</tr>");
         }

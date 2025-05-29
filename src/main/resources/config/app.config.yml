@@ -1,9 +1,9 @@
 query:
-  #  maxRows: 22
   maxRows: 10000
 
 showResult:
   maxRows: 20
+  maxColumns: 7
 
 database-validation:
   oracle: select 1 from dual
