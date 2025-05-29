@@ -1,3 +1,7 @@
+testing:
+  enable: true
+  defaultSql: "SELECT * FROM t_user;\nSELECT * FROM t_user tu \nwhere tu.enabled = 1\norder by tu.username\n;"
+
 query:
   maxRows: 10000
 
