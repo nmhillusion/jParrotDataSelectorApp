@@ -3,11 +3,11 @@ testing:
   defaultSql: "SELECT * FROM t_user;\nSELECT * FROM t_user tu \nwhere tu.enabled = 1\norder by tu.username\n;"
 
 query:
-  maxRows: 10000
+  maxRows: 21
 
 showResult:
   maxRows: 20
-  maxColumns: 7
+  maxColumns: 3
 
 database-validation:
   oracle: select 1 from dual

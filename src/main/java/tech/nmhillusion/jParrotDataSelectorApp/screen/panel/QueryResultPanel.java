@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -194,7 +195,9 @@ public class QueryResultPanel extends JPanel {
             return columns;
         }
 
-        final List<String> minimalizedColumns = columns.subList(0, showResultProperty.maxColumns() - 1);
+        final List<String> minimalizedColumns = new ArrayList<>(
+                columns.subList(0, showResultProperty.maxColumns() - 1)
+        );
         minimalizedColumns.add(COLUMN_MORE_SIGN);
 
         return minimalizedColumns;
@@ -234,7 +237,9 @@ public class QueryResultPanel extends JPanel {
 
         sb.append(headerRow).append("</thead><tbody>");
 
-        final List<List<String>> shownRows = allRowsInResultModel.subList(0, Math.min(showResultProperty.maxRows(), allRowsInResultModel.size()));
+        final List<List<String>> shownRows = new ArrayList<>(
+                allRowsInResultModel.subList(0, Math.min(showResultProperty.maxRows(), allRowsInResultModel.size()))
+        );
 
         for (final java.util.List<String> row : shownRows) {
             sb.append("<tr>");
@@ -284,6 +289,8 @@ public class QueryResultPanel extends JPanel {
                 })
                 .toList();
 
+        cachedQueryResultList = new ArrayList<>(queryResultList);
+
         final StringBuilder sb = new StringBuilder(
                 1 == queryResultList.size()
                         ? "Query result:<hr><br>"
@@ -295,8 +302,6 @@ public class QueryResultPanel extends JPanel {
                 .forEach(sb::append);
 
         resultTextArea.setText(sb.toString());
-
-        cachedQueryResultList = queryResultList;
     }
 
     private void updateStateOfActionButtons() {
@@ -359,6 +364,16 @@ public class QueryResultPanel extends JPanel {
                             queryResultMetaData.append(" (Only query first ").append(MAX_ROWS_OF_QUERY).append(" rows)");
                         }
 
+                        final List<List<String>> exportDataContent = new ArrayList<>(dbExportDataModel.getValues());
+                        if (MAX_ROWS_OF_QUERY < queryResultModel.totalRows()) {
+                            exportDataContent.add(
+                                    Collections.nCopies(exportDataContent
+                                                    .getFirst().size()
+                                            , "..."
+                                    )
+                            );
+                        }
+
                         final byte[] queryData = new ExcelWriteHelper()
                                 .addSheetData(
                                         new BasicExcelDataModel()
@@ -371,7 +386,7 @@ public class QueryResultPanel extends JPanel {
                                                         )
                                                 )
                                                 .setBodyData(
-                                                        dbExportDataModel.getValues()
+                                                        exportDataContent
                                                 )
                                                 .setSheetName("Data")
                                 )
