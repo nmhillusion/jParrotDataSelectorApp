@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
-version = "2025.2.0"
+version = "2025.2.1"
 
 var appNameL = "jParrotDataSelectorApp"
 var mainClassL = "$group.Main"
