@@ -224,8 +224,9 @@ public class QueryResultPanel extends JPanel {
         sb.append("</p>");
 
         sb.append("<table><thead>");
+        final List<String> minimalizeHeaderColumnsToDisplay = minimalizeColumnsToDisplay(dbExportDataModel.getHeader());
         final String headerRow = String.join("",
-                minimalizeColumnsToDisplay(dbExportDataModel.getHeader())
+                minimalizeHeaderColumnsToDisplay
                         .stream()
                         .map(it -> "<th style='border: solid 1px #eee;'>" + it + "</th>")
                         .toList()
@@ -241,6 +242,18 @@ public class QueryResultPanel extends JPanel {
                             minimalizeColumnsToDisplay(row)
                                     .stream()
                                     .map(it -> "<td style='border: solid 1px #eee;'>" + it + "</td>")
+                                    .toList()
+                    )
+            );
+            sb.append("</tr>");
+        }
+
+        if (allRowsInResultModel.size() > showResultProperty.maxRows()) {
+            sb.append("<tr>");
+            sb.append(String.join("",
+                            minimalizeHeaderColumnsToDisplay
+                                    .stream()
+                                    .map(it -> "<td style='border: solid 1px #eee;'>...</td>")
                                     .toList()
                     )
             );
