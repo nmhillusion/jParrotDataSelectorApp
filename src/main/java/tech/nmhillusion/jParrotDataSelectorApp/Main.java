@@ -30,10 +30,10 @@ public class Main {
     private static String APP_DISPLAY_NAME = "jParrotDataSelectorApp";
 
     public static void main(String[] args) throws IOException {
-        getLogger(Main.class).info("Starting jParrotDataSelectorApp");
-
-//        checkSystem();
+        //        checkSystem();
         fillAppProperty();
+
+        getLogger(Main.class).info("Starting " + APP_DISPLAY_NAME);
 
         try {
             setLookAndFeelUI();
