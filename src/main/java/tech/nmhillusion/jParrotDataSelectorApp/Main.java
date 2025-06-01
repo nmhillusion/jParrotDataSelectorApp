@@ -6,14 +6,16 @@ import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.MainFrame;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.n2mix.helper.YamlReader;
+import tech.nmhillusion.n2mix.validator.StringValidator;
 import tech.nmhillusion.neon_di.NeonEngine;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 
@@ -24,11 +26,14 @@ import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
  */
 
 public class Main {
-    private static final String APP_NAME = "jParrotDataSelectorApp";
     private static final NeonEngine NEON_ENGINE = new NeonEngine();
+    private static String APP_DISPLAY_NAME = "jParrotDataSelectorApp";
 
-    public static void main(String[] args) throws URISyntaxException {
+    public static void main(String[] args) throws IOException {
         getLogger(Main.class).info("Starting jParrotDataSelectorApp");
+
+//        checkSystem();
+        fillAppProperty();
 
         try {
             setLookAndFeelUI();
@@ -55,6 +60,31 @@ public class Main {
                 exitAppOnError(ex);
             }
         });
+    }
+
+    private static <T> T getAppInfoProperty(String configKey, Class<T> class2Cast) throws IOException {
+        final Path appInfoPath = PathHelper.getPathOfResource("config/app-info.yml");
+        try (final InputStream fis = Files.newInputStream(appInfoPath)) {
+            return new YamlReader(fis).getProperty(configKey, class2Cast);
+        }
+    }
+
+    private static void fillAppProperty() throws IOException {
+        final String appName = getAppInfoProperty("info.name", String.class);
+        final String appVersion = getAppInfoProperty("info.version", String.class);
+
+        APP_DISPLAY_NAME = appName + (
+                StringValidator.isBlank(appVersion) ? "" : " v" + appVersion
+        )
+        ;
+    }
+
+    private static void checkSystem() {
+        System.getenv()
+                .forEach((k, v) -> getLogger(Main.class).info("env {}: {}", k, v));
+
+        System.getProperties()
+                .forEach((k, v) -> getLogger(Main.class).info("prop {}: {}", k, v));
     }
 
     private static void initForExecutionState(ExecutionState executionState) {
@@ -97,19 +127,19 @@ public class Main {
         final JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 860);
-        frame.setTitle(APP_NAME);
+        frame.setTitle(APP_DISPLAY_NAME);
         frame.setLocationByPlatform(true);
         setIconForApp(frame);
 
         executionState.addListener(() -> {
             if (null == executionState.getDatasourceModel()) {
-                frame.setTitle(APP_NAME);
+                frame.setTitle(APP_DISPLAY_NAME);
                 return;
             }
 
             final String dataSourceName = executionState.getDatasourceModel()
                     .getDataSourceName();
-            frame.setTitle(dataSourceName + " - " + APP_NAME);
+
             frame.revalidate();
             frame.repaint();
         });

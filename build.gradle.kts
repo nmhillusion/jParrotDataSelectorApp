@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
-version = "2025.2.1"
+version = "2025.2.2"
 
 var appNameL = "jParrotDataSelectorApp"
 var mainClassL = "$group.Main"
@@ -98,6 +98,20 @@ tasks.distZip {
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+}
+
+val generateVersionProperties by tasks.registering {
+    val propertiesFile = file("src/main/resources/config/app-info.yml")
+    outputs.file(propertiesFile)
+
+    doLast {
+        propertiesFile.parentFile.mkdirs()
+        propertiesFile.writeText("info:\n  name: ${appNameL}\n  version: ${project.version}\n")
+    }
+}
+
+tasks.named("processResources") {
+    dependsOn(generateVersionProperties)
 }
 
 application {
