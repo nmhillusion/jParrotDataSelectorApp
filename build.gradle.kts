@@ -33,13 +33,13 @@ dependencies {
     implementation("com.zaxxer:HikariCP:6.3.0")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-jdbc
-    implementation("org.springframework:spring-jdbc:6.2.6")
+    implementation("org.springframework:spring-jdbc:6.2.7")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-orm
-    implementation("org.springframework:spring-orm:6.2.6")
+    implementation("org.springframework:spring-orm:6.2.7")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-context
-    implementation("org.springframework:spring-context:6.2.6")
+    implementation("org.springframework:spring-context:6.2.7")
 
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-jcache
     implementation("org.hibernate.orm:hibernate-jcache:6.6.13.Final")
