@@ -109,6 +109,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
                     , EMPTY_BORDER_SIZE.bottom()
                     , EMPTY_BORDER_SIZE.right()
             ));
+            sqlEditorPanel.setClickExecuteSqlListener(this::onClickExecSql);
         }
 
         {
