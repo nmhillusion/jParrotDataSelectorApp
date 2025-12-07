@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
-version = "2025.2.2"
+version = "2025.3.1"
 
 var appNameL = "jParrotDataSelectorApp"
 var mainClassL = "$group.Main"
@@ -22,48 +22,48 @@ dependencies {
     // https://jitpack.io/#nmhillusion/n2mix-java
     implementation("com.github.nmhillusion:n2mix-java:2025.5.12")
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
-    implementation("org.yaml:snakeyaml:2.4")
+    implementation("org.yaml:snakeyaml:2.5")
 
     //// DATABASE SESSION FACTORY /////////////////////////
 
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
-    implementation("org.hibernate.orm:hibernate-core:6.6.13.Final")
-
-    // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
-    implementation("com.zaxxer:HikariCP:6.3.0")
-
-    // https://mvnrepository.com/artifact/org.springframework/spring-jdbc
-    implementation("org.springframework:spring-jdbc:6.2.6")
-
-    // https://mvnrepository.com/artifact/org.springframework/spring-orm
-    implementation("org.springframework:spring-orm:6.2.6")
-
-    // https://mvnrepository.com/artifact/org.springframework/spring-context
-    implementation("org.springframework:spring-context:6.2.6")
+    implementation("org.hibernate.orm:hibernate-core:7.1.11.Final")
 
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-jcache
-    implementation("org.hibernate.orm:hibernate-jcache:6.6.13.Final")
+    implementation("org.hibernate.orm:hibernate-jcache:7.1.11.Final")
+
+    // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
+    implementation("com.zaxxer:HikariCP:7.0.2")
+
+    // https://mvnrepository.com/artifact/org.springframework/spring-jdbc
+    implementation("org.springframework:spring-jdbc:6.2.14")
+
+    // https://mvnrepository.com/artifact/org.springframework/spring-orm
+    implementation("org.springframework:spring-orm:6.2.14")
+
+    // https://mvnrepository.com/artifact/org.springframework/spring-context
+    implementation("org.springframework:spring-context:6.2.14")
 
     // https://mvnrepository.com/artifact/org.ehcache/ehcache
-    implementation("org.ehcache:ehcache:3.10.8")
+    implementation("org.ehcache:ehcache:3.11.1")
 
     //// DATABASE DRIVERS ///////////////////
 
     // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
-    implementation("com.mysql:mysql-connector-j:9.3.0")
+    implementation("com.mysql:mysql-connector-j:9.5.0")
 
     // https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc11
-    implementation("com.oracle.database.jdbc:ojdbc11:23.8.0.25.04")
+    implementation("com.oracle.database.jdbc:ojdbc11:23.26.0.0.0")
 
     // https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc
-    implementation("com.microsoft.sqlserver:mssql-jdbc:12.10.0.jre11")
+    implementation("com.microsoft.sqlserver:mssql-jdbc:13.2.1.jre11")
 
     // EXCEL EXPORT //////////////////////
     // https://mvnrepository.com/artifact/org.apache.poi/poi
-    implementation("org.apache.poi:poi:5.4.1")
+    implementation("org.apache.poi:poi:5.5.1")
 
     // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml
-    implementation("org.apache.poi:poi-ooxml:5.4.1")
+    implementation("org.apache.poi:poi-ooxml:5.5.1")
 
     /// TEST /////////////////////
 
