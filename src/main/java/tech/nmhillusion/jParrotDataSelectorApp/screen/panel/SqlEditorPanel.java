@@ -4,6 +4,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.ClickExecuteSqlListener;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.n2mix.helper.YamlReader;
+import tech.nmhillusion.n2mix.validator.StringValidator;
 import tech.nmhillusion.neon_di.annotation.Inject;
 import tech.nmhillusion.neon_di.annotation.Neon;
 
@@ -112,7 +113,9 @@ public class SqlEditorPanel extends JPanel {
     }
 
     public String getSqlText() {
-        final String sqlText = sqlTextArea.getText();
+        final String selectedText = sqlTextArea.getSelectedText();
+        final String sqlText = StringValidator.isBlank(selectedText) ? sqlTextArea.getText() : selectedText;
+
         executionState.setSqlData(sqlText);
         return sqlText;
     }
