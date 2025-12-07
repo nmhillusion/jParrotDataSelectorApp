@@ -1,6 +1,7 @@
 package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 
 import org.apache.poi.ss.usermodel.*;
+import tech.nmhillusion.jParrotDataSelectorApp.helper.HtmlSanitizer;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
@@ -246,6 +247,7 @@ public class QueryResultPanel extends JPanel {
             sb.append(String.join("",
                             minimalizeColumnsToDisplay(row)
                                     .stream()
+                                    .map(it -> normalizeCellContentToDisplay(it))
                                     .map(it -> "<td style='border: solid 1px #eee;'>" + it + "</td>")
                                     .toList()
                     )
@@ -268,6 +270,10 @@ public class QueryResultPanel extends JPanel {
         sb.append("</tbody></table><br><hr><br>");
 
         return sb;
+    }
+
+    private String normalizeCellContentToDisplay(String cellContent) {
+        return HtmlSanitizer.escapeHtml(cellContent);
     }
 
     public void showResult(java.util.List<QueryResultModel> queryResultList_) {

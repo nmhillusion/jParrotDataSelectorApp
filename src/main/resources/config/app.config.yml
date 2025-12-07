@@ -7,7 +7,7 @@ query:
 
 showResult:
   maxRows: 20
-  maxColumns: 3
+  maxColumns: 10
 
 database-validation:
   oracle: select 1 from dual
