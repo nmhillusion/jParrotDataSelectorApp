@@ -24,7 +24,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
     implementation("org.yaml:snakeyaml:2.5")
 
-    //// DATABASE SESSION FACTORY /////////////////////////
+    //// Mark: DATABASE SESSION FACTORY /////////////////////////
 
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
     implementation("org.hibernate.orm:hibernate-core:7.1.11.Final")
@@ -47,7 +47,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.ehcache/ehcache
     implementation("org.ehcache:ehcache:3.11.1")
 
-    //// DATABASE DRIVERS ///////////////////
+    //// Mark: DATABASE DRIVERS ///////////////////
 
     // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     implementation("com.mysql:mysql-connector-j:9.5.0")
@@ -65,7 +65,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml
     implementation("org.apache.poi:poi-ooxml:5.5.1")
 
-    /// TEST /////////////////////
+    /// Mark: TEST /////////////////////
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
