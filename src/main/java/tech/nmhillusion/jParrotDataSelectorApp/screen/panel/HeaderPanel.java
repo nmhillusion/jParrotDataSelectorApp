@@ -4,8 +4,10 @@ import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
+import tech.nmhillusion.jParrotDataSelectorApp.state.ExecuteMode;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
+import tech.nmhillusion.n2mix.helper.log.LogHelper;
 import tech.nmhillusion.neon_di.annotation.Inject;
 import tech.nmhillusion.neon_di.annotation.Neon;
 
@@ -26,6 +28,7 @@ public class HeaderPanel extends JPanel {
     private final ExecutionState executionState;
     private final DatabaseLoader databaseLoader;
     private final JButton btnChangeDatasource = new JButton("???");
+    private final JButton btnExecutionMode = new JButton();
     private LoadingStateListener loadingStateListener;
 
     public HeaderPanel(@Inject ExecutionState executionState, @Inject DatabaseLoader databaseLoader) throws IOException {
@@ -78,6 +81,36 @@ public class HeaderPanel extends JPanel {
                 btnChangeDatasource
                 , gridBagConstraints
         );
+
+        {
+            btnExecutionMode.addActionListener(this::onClickChangeExecuteMode);
+
+            gridBagConstraints.gridx = 2;
+            gridBagConstraints.gridy = 0;
+            add(
+                    btnExecutionMode
+                    , gridBagConstraints
+            );
+
+            final ExecuteMode defaultMode = ExecuteMode.SELECT;
+            executionState.setExecuteMode(defaultMode);
+            btnExecutionMode.setText(defaultMode.getDisplayText());
+        }
+    }
+
+    private void onClickChangeExecuteMode(ActionEvent actionEvent) {
+        LogHelper.getLogger(this).info("onClickChangeExecuteMode");
+        final ExecuteMode executeMode = executionState.getExecuteMode();
+        final ExecuteMode nextMode = executeMode.nextMode();
+
+        LogHelper.getLogger(this).info("nextMode: {}", nextMode);
+
+        if (null == nextMode || nextMode == executeMode) {
+            return;
+        }
+
+        executionState.setExecuteMode(nextMode);
+        btnExecutionMode.setText(nextMode.getDisplayText());
     }
 
     private void setFixedSizeOfButton(JButton btn, int parentWidth) {

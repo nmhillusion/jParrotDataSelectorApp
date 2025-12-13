@@ -15,6 +15,7 @@ import java.util.List;
  */
 @Neon
 public class ExecutionState extends Stringeable {
+    private ExecuteMode executeMode;
     private final List<ExecutionStateListener> listeners = new ArrayList<>();
     private DatasourceModel datasourceModel;
     private String sqlData;
@@ -67,5 +68,19 @@ public class ExecutionState extends Stringeable {
         this.currentBackgroundWorker = currentBackgroundWorker;
         triggerListeners();
         return this;
+    }
+
+    public ExecuteMode getExecuteMode() {
+        return executeMode;
+    }
+
+    public ExecutionState setExecuteMode(ExecuteMode executeMode) {
+        this.executeMode = executeMode;
+        triggerListeners();
+        return this;
+    }
+
+    public List<ExecutionStateListener> getListeners() {
+        return listeners;
     }
 }
