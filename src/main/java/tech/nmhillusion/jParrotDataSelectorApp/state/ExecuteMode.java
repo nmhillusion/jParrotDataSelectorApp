@@ -6,8 +6,8 @@ package tech.nmhillusion.jParrotDataSelectorApp.state;
  * created date: 2025-12-13
  */
 public enum ExecuteMode {
-    SELECT(1, "Mode: Select"),
-    UPDATE(2, "Mode: Update");
+    SELECT(1, "Mode: SELECT"),
+    UPDATE(2, "Mode: UPDATE");
 
     private final int value;
     private final String displayText;
