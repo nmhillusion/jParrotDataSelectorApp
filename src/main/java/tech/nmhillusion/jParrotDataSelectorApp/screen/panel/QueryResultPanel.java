@@ -8,6 +8,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.SqlResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.UpdateResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
+import tech.nmhillusion.jParrotDataSelectorApp.state.ExecuteMode;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
 import tech.nmhillusion.n2mix.helper.YamlReader;
@@ -354,6 +355,8 @@ public class QueryResultPanel extends JPanel {
     }
 
     private void showResultUpdate(List<UpdateResultModel> resultList) {
+        cachedQueryResultList = Collections.emptyList();
+
         final StringBuilder sb = new StringBuilder(
                 1 == resultList.size()
                         ? "Update result:<hr><br>"
@@ -370,8 +373,12 @@ public class QueryResultPanel extends JPanel {
     }
 
     private void updateStateOfActionButtons() {
-        final boolean resultAvailable = null != cachedQueryResultList && !cachedQueryResultList.isEmpty();
+        final boolean resultAvailable = ExecuteMode.SELECT == executionState.getExecuteMode()
+                && null != cachedQueryResultList
+                && !cachedQueryResultList.isEmpty();
+
         final boolean isLoading = executionState.getIsLoading();
+
         btnCopy.setEnabled(!isLoading && resultAvailable);
         btnExport.setEnabled(!isLoading && resultAvailable);
     }
