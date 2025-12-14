@@ -5,6 +5,8 @@ import tech.nmhillusion.jParrotDataSelectorApp.helper.HtmlSanitizer;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
+import tech.nmhillusion.jParrotDataSelectorApp.model.SqlResultModel;
+import tech.nmhillusion.jParrotDataSelectorApp.model.UpdateResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
@@ -14,6 +16,7 @@ import tech.nmhillusion.n2mix.helper.office.excel.writer.ExcelWriteHelper;
 import tech.nmhillusion.n2mix.helper.office.excel.writer.model.BasicExcelDataModel;
 import tech.nmhillusion.n2mix.helper.storage.FileHelper;
 import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
+import tech.nmhillusion.n2mix.util.CastUtil;
 import tech.nmhillusion.n2mix.util.DateUtil;
 import tech.nmhillusion.neon_di.annotation.Inject;
 import tech.nmhillusion.neon_di.annotation.Neon;
@@ -204,7 +207,7 @@ public class QueryResultPanel extends JPanel {
         return minimalizedColumns;
     }
 
-    private StringBuilder showEachResult(QueryResultModel queryResultModel) {
+    private StringBuilder showEachQueryResult(QueryResultModel queryResultModel) {
         final StringBuilder sb = new StringBuilder();
 
         sb.append(
@@ -272,17 +275,57 @@ public class QueryResultPanel extends JPanel {
         return sb;
     }
 
+    private StringBuilder showEachUpdateResult(UpdateResultModel updateResultModel) {
+        final StringBuilder sb = new StringBuilder();
+
+        sb.append(
+                MessageFormat.format(
+                        "<pre class='language-sql'><code>{0}</code></pre>"
+                        , updateResultModel.sqlText()
+                                .replace('\n', ' ')
+                )
+        );
+
+        sb.append(
+                MessageFormat.format(
+                        "<i style='color: green; font-weight: bold;font-style: italic;'> -- {0} rows affected </i>"
+                        , updateResultModel.affectedRows()
+                )
+        );
+
+        sb.append(
+                "<br><hr><br>"
+        );
+
+        return sb;
+    }
+
     private String normalizeCellContentToDisplay(String cellContent) {
         return HtmlSanitizer.escapeHtml(cellContent);
     }
 
-    public void showResult(java.util.List<QueryResultModel> queryResultList_) {
-        if (null == queryResultList_ || queryResultList_.isEmpty()) {
+    public void showResult(java.util.List<? extends SqlResultModel> sqlResultList_) {
+        if (null == sqlResultList_ || sqlResultList_.isEmpty()) {
             resultTextArea.setText("No result");
             return;
         }
 
-        final java.util.List<QueryResultModel> queryResultList = queryResultList_
+        switch (executionState.getExecuteMode()) {
+            case SELECT -> showResultQuery(sqlResultList_
+                    .stream()
+                    .map(it -> CastUtil.safeCast(it, QueryResultModel.class))
+                    .toList()
+            );
+            case UPDATE -> showResultUpdate(sqlResultList_
+                    .stream()
+                    .map(it -> CastUtil.safeCast(it, UpdateResultModel.class))
+                    .toList()
+            );
+        }
+    }
+
+    private void showResultQuery(java.util.List<QueryResultModel> sqlResultList_) {
+        final java.util.List<QueryResultModel> queryResultList = sqlResultList_
                 .stream()
                 .map(it -> {
                     final String sqlText = it.sqlText();
@@ -304,10 +347,26 @@ public class QueryResultPanel extends JPanel {
         );
 
         queryResultList.stream()
-                .map(this::showEachResult)
+                .map(this::showEachQueryResult)
                 .forEach(sb::append);
 
         resultTextArea.setText(sb.toString());
+    }
+
+    private void showResultUpdate(List<UpdateResultModel> resultList) {
+        final StringBuilder sb = new StringBuilder(
+                1 == resultList.size()
+                        ? "Update result:<hr><br>"
+                        : MessageFormat.format("Update result of {0} SQLs:<hr><br>", resultList.size())
+        );
+
+        resultList.stream()
+                .map(this::showEachUpdateResult)
+                .forEach(sb::append);
+
+        resultTextArea.setText(
+                sb.toString()
+        );
     }
 
     private void updateStateOfActionButtons() {

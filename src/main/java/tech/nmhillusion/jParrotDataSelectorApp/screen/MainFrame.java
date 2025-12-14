@@ -4,6 +4,8 @@ import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
+import tech.nmhillusion.jParrotDataSelectorApp.model.SqlResultModel;
+import tech.nmhillusion.jParrotDataSelectorApp.model.UpdateResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.dialog.OptionDialogPane;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.HeaderPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.QueryResultPanel;
@@ -230,7 +232,7 @@ public class MainFrame extends JPanel implements LoadingStateListener {
                 );
             });
 
-            final CompletableFuture<List<QueryResultModel>> completableFuture = CompletableFuture.supplyAsync(() -> {
+            final CompletableFuture<List<? extends SqlResultModel>> completableFuture = CompletableFuture.supplyAsync(() -> {
                 try {
                     return doExecSqlQueries(datasourceModel, databaseExecutor, sqlBlockList);
                 } catch (InterruptedException | ExecutionException e) {
@@ -256,11 +258,12 @@ public class MainFrame extends JPanel implements LoadingStateListener {
         }
     }
 
-    private List<QueryResultModel> doExecSqlQueries(DatasourceModel datasourceModel, DatabaseExecutor databaseExecutor, List<String> sqlBlockList) throws InterruptedException, ExecutionException {
-        final SwingWorker<List<QueryResultModel>, Throwable> swingWorker = new SwingWorker<>() {
+    private List<? extends SqlResultModel> doExecSqlQueries(DatasourceModel datasourceModel, DatabaseExecutor databaseExecutor, List<String> sqlBlockList) throws InterruptedException, ExecutionException {
+        final SwingWorker<List<? extends SqlResultModel>, Throwable> swingWorker = new SwingWorker<>() {
             @Override
-            protected List<QueryResultModel> doInBackground() throws Exception {
+            protected List<? extends SqlResultModel> doInBackground() throws Exception {
                 final List<QueryResultModel> queryResultList = new ArrayList<>();
+                final List<UpdateResultModel> updatedResultList = new ArrayList<>();
 
                 publish();
                 try {
@@ -268,13 +271,22 @@ public class MainFrame extends JPanel implements LoadingStateListener {
                         publish();
                         getLogger(this).info("exec sql: {}", sqlText);
 
-                        queryResultList.add(
-                                databaseLoader.execSqlQuery(
-                                        datasourceModel
-                                        , databaseExecutor
-                                        , sqlText
-                                )
-                        );
+                        switch (executionState.getExecuteMode()) {
+                            case SELECT -> queryResultList.add(
+                                    databaseLoader.execSqlQuery(
+                                            datasourceModel
+                                            , databaseExecutor
+                                            , sqlText
+                                    )
+                            );
+                            case UPDATE -> updatedResultList.add(
+                                    databaseLoader.execSqlUpdate(
+                                            datasourceModel
+                                            , databaseExecutor
+                                            , sqlText
+                                    )
+                            );
+                        }
 
                         publish();
                     }
@@ -288,7 +300,10 @@ public class MainFrame extends JPanel implements LoadingStateListener {
                     publish(new SQLException(ex));
                 }
 
-                return queryResultList;
+                return switch (executionState.getExecuteMode()) {
+                    case SELECT -> queryResultList;
+                    case UPDATE -> updatedResultList;
+                };
             }
 
             @Override

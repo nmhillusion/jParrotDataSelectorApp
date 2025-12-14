@@ -7,5 +7,6 @@ import tech.nmhillusion.n2mix.model.database.DbExportDataModel;
  * <p>
  * created date: 2025-05-11
  */
-public record QueryResultModel(String sqlText, long totalRows, DbExportDataModel dbExportDataModel) {
+public record QueryResultModel(String sqlText, long totalRows,
+                               DbExportDataModel dbExportDataModel) implements SqlResultModel {
 }

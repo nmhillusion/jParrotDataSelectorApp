@@ -4,6 +4,7 @@ import tech.nmhillusion.jParrotDataSelectorApp.constant.DbNameType;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
+import tech.nmhillusion.jParrotDataSelectorApp.model.UpdateResultModel;
 import tech.nmhillusion.n2mix.constant.CommonConfigDataSourceValue;
 import tech.nmhillusion.n2mix.helper.YamlReader;
 import tech.nmhillusion.n2mix.helper.database.config.DataSourceProperties;
@@ -312,6 +313,18 @@ public class DatabaseLoader {
                 , totalRows
                 , dbExportDataModel
         );
+    }
+
+    public UpdateResultModel execSqlUpdate(DatasourceModel datasourceModel, DatabaseExecutor databaseExecutor, String sqlText) throws Throwable {
+        final String formalSqlText = sqlText;
+
+        getLogger(this).info("formal exec sql: {}", formalSqlText);
+        return databaseExecutor.doReturningWork(conn ->
+                conn.doReturningPreparedStatement(formalSqlText, preparedStatement_ -> {
+                    final int affectedRows = preparedStatement_.executeUpdate();
+
+                    return new UpdateResultModel(sqlText, affectedRows);
+                }));
     }
 
 }
