@@ -3,7 +3,9 @@ package tech.nmhillusion.jParrotDataSelectorApp.screen.panel;
 import tech.nmhillusion.jParrotDataSelectorApp.helper.PathHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.model.ClickExecuteSqlListener;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
+import tech.nmhillusion.jParrotDataSelectorApp.state.TextAreaLineChangeListener;
 import tech.nmhillusion.n2mix.helper.YamlReader;
+import tech.nmhillusion.n2mix.helper.log.LogHelper;
 import tech.nmhillusion.n2mix.validator.StringValidator;
 import tech.nmhillusion.neon_di.annotation.Inject;
 import tech.nmhillusion.neon_di.annotation.Neon;
@@ -16,6 +18,8 @@ import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 
@@ -30,6 +34,8 @@ public class SqlEditorPanel extends JPanel {
     private final SqlEditorProperty sqlEditorProperty;
     private JTextArea sqlTextArea;
     private ClickExecuteSqlListener clickExecuteSqlListener;
+    private int previousLineCount = 0;
+    private JTextArea lineNumberGutter;
 
     public SqlEditorPanel(@Inject ExecutionState executionState) throws IOException {
         this.executionState = executionState;
@@ -53,19 +59,22 @@ public class SqlEditorPanel extends JPanel {
         }
     }
 
-    private void setHeightForComponent(Component comp, int height) {
-        final Dimension preferredSize = new Dimension(Short.MAX_VALUE, height);
-        comp.setPreferredSize(preferredSize);
-        comp.setMaximumSize(preferredSize);
-        comp.setMinimumSize(preferredSize);
-    }
-
     private void initComponents() {
         final JLabel labelComp = new JLabel("SQL:");
         add(
                 labelComp, BorderLayout.NORTH
         );
 
+        final JPanel editorContainer = createEditorContainer();
+        final JScrollPane scrollPane = new JScrollPane(editorContainer);
+        add(
+                scrollPane, BorderLayout.CENTER
+        );
+
+        handleLineCountEvent();
+    }
+
+    private JPanel createEditorContainer() {
         this.sqlTextArea = new JTextArea();
         sqlTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         //-- Mark: TEST: default SQL to test
@@ -92,11 +101,39 @@ public class SqlEditorPanel extends JPanel {
         });
         sqlTextArea.setLineWrap(false);
         sqlTextArea.setRows(18);
+        sqlTextArea.getDocument().addDocumentListener(new TextAreaLineChangeListener(this::handleLineCountEvent));
 
-        final JScrollPane scrollPane = new JScrollPane(sqlTextArea);
-        add(
-                scrollPane, BorderLayout.CENTER
+        final JPanel editorContainer = new JPanel();
+        editorContainer.setLayout(new BorderLayout());
+        editorContainer.add(
+                sqlTextArea, BorderLayout.CENTER
         );
+
+        lineNumberGutter = new JTextArea("1\n2\n");
+        lineNumberGutter.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
+        lineNumberGutter.setEditable(false);
+        lineNumberGutter.setLineWrap(false);
+        lineNumberGutter.setBackground(Color.decode("#eeeeee"));
+        lineNumberGutter.setForeground(Color.decode("#666666"));
+        editorContainer.add(
+                lineNumberGutter, BorderLayout.WEST
+        );
+
+        return editorContainer;
+    }
+
+    private void handleLineCountEvent() {
+        int currentLineCount = sqlTextArea.getLineCount();
+        if (currentLineCount != previousLineCount) {
+            LogHelper.getLogger(this).info("Line count changed from {} to {}", previousLineCount, currentLineCount);
+            previousLineCount = currentLineCount;
+
+            lineNumberGutter.setText(
+                    IntStream.range(1, currentLineCount + 1)
+                            .mapToObj(String::valueOf)
+                            .collect(Collectors.joining("\n"))
+            );
+        }
     }
 
     private void handleKeyboardListener(KeyEvent keyEvent) {
