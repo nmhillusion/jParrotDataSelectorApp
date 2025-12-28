@@ -1,5 +1,6 @@
 package tech.nmhillusion.jParrotDataSelectorApp.model;
 
+import tech.nmhillusion.jParrotDataSelectorApp.constant.DbNameType;
 import tech.nmhillusion.n2mix.constant.CommonConfigDataSourceValue;
 import tech.nmhillusion.n2mix.type.Stringeable;
 
@@ -14,6 +15,7 @@ public class DatasourceModel extends Stringeable {
     private String jdbcUrl;
     private String username;
     private String password;
+    private DbNameType dbNameType;
 
     public String getDataSourceName() {
         return dataSourceName;
@@ -57,6 +59,15 @@ public class DatasourceModel extends Stringeable {
 
     public DatasourceModel setPassword(String password) {
         this.password = password;
+        return this;
+    }
+
+    public DbNameType getDbNameType() {
+        return dbNameType;
+    }
+
+    public DatasourceModel setDbNameType(DbNameType dbNameType) {
+        this.dbNameType = dbNameType;
         return this;
     }
 

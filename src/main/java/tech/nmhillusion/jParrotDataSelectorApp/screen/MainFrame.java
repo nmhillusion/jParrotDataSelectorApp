@@ -2,6 +2,7 @@ package tech.nmhillusion.jParrotDataSelectorApp.screen;
 
 import tech.nmhillusion.jParrotDataSelectorApp.helper.ViewHelper;
 import tech.nmhillusion.jParrotDataSelectorApp.loader.DatabaseLoader;
+import tech.nmhillusion.jParrotDataSelectorApp.loader.SqlPreprocessor;
 import tech.nmhillusion.jParrotDataSelectorApp.model.DatasourceModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.QueryResultModel;
 import tech.nmhillusion.jParrotDataSelectorApp.model.SqlResultModel;
@@ -13,7 +14,6 @@ import tech.nmhillusion.jParrotDataSelectorApp.screen.panel.SqlEditorPanel;
 import tech.nmhillusion.jParrotDataSelectorApp.state.ExecutionState;
 import tech.nmhillusion.jParrotDataSelectorApp.state.LoadingStateListener;
 import tech.nmhillusion.n2mix.helper.database.query.DatabaseExecutor;
-import tech.nmhillusion.n2mix.util.StringUtil;
 import tech.nmhillusion.n2mix.validator.StringValidator;
 import tech.nmhillusion.neon_di.annotation.Inject;
 import tech.nmhillusion.neon_di.annotation.Neon;
@@ -24,11 +24,9 @@ import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Predicate;
 
 import static tech.nmhillusion.n2mix.helper.log.LogHelper.getLogger;
 
@@ -203,12 +201,9 @@ public class MainFrame extends JPanel implements LoadingStateListener {
                 return;
             }
 
-            final List<String> sqlBlockList = Arrays.stream(StringUtil.trimWithNull(
-                            sqlTextAll
-                    ).split(";"))
-                    .map(StringUtil::trimWithNull)
-                    .filter(Predicate.not(StringValidator::isBlank))
-                    .toList();
+            final List<String> sqlBlockList = SqlPreprocessor
+                    .of(executionState.getDatasourceModel().getDbNameType())
+                    .parseSqlStatements(sqlTextAll);
 
             final String executionStateText = String.valueOf(executionState);
             getLogger(this).info("exec state: {}", executionStateText);

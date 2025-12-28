@@ -151,6 +151,9 @@ public class DatabaseLoader {
                     datasourceModel.setJdbcUrl(jdbcUrl);
                     datasourceModel.setUsername(databaseMap.get("username").toString());
                     datasourceModel.setPassword(databaseMap.get("password").toString());
+                    datasourceModel.setDbNameType(
+                            getDbTypeNameByJdbcUrl(jdbcUrl).orElseThrow()
+                    );
 
                     if (resultList
                             .stream()

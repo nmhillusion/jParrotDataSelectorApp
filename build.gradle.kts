@@ -49,6 +49,9 @@ dependencies {
 
     //// Mark: DATABASE DRIVERS ///////////////////
 
+    // https://mvnrepository.com/artifact/org.apache.calcite/calcite-core
+    implementation("org.apache.calcite:calcite-core:1.41.0")
+
     // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     implementation("com.mysql:mysql-connector-j:9.5.0")
 
