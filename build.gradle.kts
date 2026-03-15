@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("application")
     id("distribution")
+    id("org.owasp.dependencycheck") version "9.2.0"
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
@@ -53,10 +54,19 @@ dependencies {
     implementation("org.apache.calcite:calcite-core:1.41.0")
 
     // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
-    implementation("com.mysql:mysql-connector-j:9.5.0")
+    implementation("com.mysql:mysql-connector-j:9.6.0")
 
     // https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc11
     implementation("com.oracle.database.jdbc:ojdbc11:23.26.0.0.0")
+
+    constraints {
+        implementation("net.minidev:json-smart:2.5.2") {
+            because("CVE-2024-57699: High-severity Denial of Service vulnerability via stack exhaustion.")
+        }
+        implementation("io.airlift:aircompressor:2.0.3") {
+            because("CVE-2025-67721: High-severity Information Leak vulnerability in Snappy/LZ4 buffers.")
+        }
+    }
 
     // https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc
     implementation("com.microsoft.sqlserver:mssql-jdbc:13.2.1.jre11")
@@ -76,6 +86,11 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+dependencyCheck {
+    failBuildOnCVSS = 8f
+    nvd.apiKey = "4fcade57-8220-41ef-81df-bbd737a596ab"
 }
 
 tasks.jar {
