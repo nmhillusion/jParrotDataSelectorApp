@@ -66,6 +66,12 @@ dependencies {
         implementation("io.airlift:aircompressor:2.0.3") {
             because("CVE-2025-67721: High-severity Information Leak vulnerability in Snappy/LZ4 buffers.")
         }
+        implementation("org.apache.httpcomponents.client5:httpclient5:5.6.3") {
+            because("GHSA-hjcp-jmpx-g3qm / CVE-2026-64607: Connection leak on Content-Encoding decode error leads to pool exhaustion DoS.")
+        }
+        implementation("org.apache.logging.log4j:log4j-api:2.25.5") {
+            because("GHSA-qv9r-c865-cp47 / CVE-2026-49844: Improper encoding of non-finite floating-point values during MapMessage JSON serialization.")
+        }
     }
 
     // https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc
