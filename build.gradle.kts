@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("application")
     id("distribution")
-    id("org.owasp.dependencycheck") version "9.2.0"
+    id("org.owasp.dependencycheck") version "13.0.0"
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
@@ -65,6 +65,9 @@ dependencies {
         }
         implementation("io.airlift:aircompressor:2.0.3") {
             because("CVE-2025-67721: High-severity Information Leak vulnerability in Snappy/LZ4 buffers.")
+        }
+        implementation("org.apache.httpcomponents.client5:httpclient5:5.6.3") {
+            because("GHSA-hjcp-jmpx-g3qm (CVE-2026-64607): Connection leak on Content-Encoding decode error in the classic I/O client leads to pool exhaustion DoS.")
         }
     }
 
