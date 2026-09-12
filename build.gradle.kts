@@ -37,13 +37,13 @@ dependencies {
     implementation("com.zaxxer:HikariCP:7.0.2")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-jdbc
-    implementation("org.springframework:spring-jdbc:6.2.14")
+    implementation("org.springframework:spring-jdbc:6.2.19")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-orm
-    implementation("org.springframework:spring-orm:6.2.14")
+    implementation("org.springframework:spring-orm:6.2.19")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-context
-    implementation("org.springframework:spring-context:6.2.14")
+    implementation("org.springframework:spring-context:6.2.19")
 
     // https://mvnrepository.com/artifact/org.ehcache/ehcache
     implementation("org.ehcache:ehcache:3.11.1")
@@ -65,6 +65,9 @@ dependencies {
         }
         implementation("io.airlift:aircompressor:2.0.3") {
             because("CVE-2025-67721: High-severity Information Leak vulnerability in Snappy/LZ4 buffers.")
+        }
+        implementation("org.springframework:spring-core:6.2.19") {
+            because("GHSA-659m-px2c-25wj (CVE-2026-41848): Regular Expression Denial of Service (ReDoS) via AntPathMatcher. Fixed in 6.2.19; versions 6.2.0 through 6.2.18 are vulnerable.")
         }
     }
 
