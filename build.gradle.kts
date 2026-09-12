@@ -66,6 +66,12 @@ dependencies {
         implementation("io.airlift:aircompressor:2.0.3") {
             because("CVE-2025-67721: High-severity Information Leak vulnerability in Snappy/LZ4 buffers.")
         }
+        implementation("org.apache.httpcomponents.core5:httpcore5:5.4.3") {
+            because("GHSA-hf6x-8p5f-cgmf / CVE-2026-54399: Uncontrolled Resource Consumption in the HTTP/1.1 message parser via excessive number of headers / excessive header length - High-severity Denial of Service via memory exhaustion.")
+        }
+        implementation("org.apache.httpcomponents.core5:httpcore5-h2:5.4.3") {
+            because("GHSA-v3jc-474w-2wm6 / CVE-2026-54428: HPackDecoder Unlimited Header List Size Before SETTINGS ACK - High-severity Denial of Service via memory exhaustion.")
+        }
     }
 
     // https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc
