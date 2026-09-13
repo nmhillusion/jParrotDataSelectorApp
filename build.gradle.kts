@@ -24,6 +24,12 @@ dependencies {
     implementation("com.github.nmhillusion:n2mix-java:2025.5.12")
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
     implementation("org.yaml:snakeyaml:2.5")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.9")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.18.6")
+    implementation("org.apache.httpcomponents.client5:httpclient5:5.6.3")
+    implementation("org.apache.commons:commons-lang3:3.18.0")
+    implementation("org.springframework:spring-core:6.2.19")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.78")
 
     //// Mark: DATABASE SESSION FACTORY /////////////////////////
 
