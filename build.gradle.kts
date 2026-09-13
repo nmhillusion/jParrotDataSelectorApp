@@ -66,6 +66,9 @@ dependencies {
         implementation("io.airlift:aircompressor:2.0.3") {
             because("CVE-2025-67721: High-severity Information Leak vulnerability in Snappy/LZ4 buffers.")
         }
+        implementation("com.fasterxml.jackson.core:jackson-core:2.18.6") {
+            because("GHSA-72hv-8253-57qq: Number Length Constraint Bypass in Async Parser Leads to Potential DoS Condition. Fixed in 2.18.6 and 2.21.1+")
+        }
     }
 
     // https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc
