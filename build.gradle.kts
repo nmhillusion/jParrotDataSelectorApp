@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("application")
     id("distribution")
-    id("org.owasp.dependencycheck") version "9.2.0"
+    id("org.owasp.dependencycheck") version "13.0.0"
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
@@ -43,7 +43,7 @@ dependencies {
     implementation("org.springframework:spring-orm:6.2.14")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-context
-    implementation("org.springframework:spring-context:6.2.14")
+    implementation("org.springframework:spring-context:7.1.0-M2")
 
     // https://mvnrepository.com/artifact/org.ehcache/ehcache
     implementation("org.ehcache:ehcache:3.11.1")
@@ -51,7 +51,7 @@ dependencies {
     //// Mark: DATABASE DRIVERS ///////////////////
 
     // https://mvnrepository.com/artifact/org.apache.calcite/calcite-core
-    implementation("org.apache.calcite:calcite-core:1.41.0")
+    implementation("org.apache.calcite:calcite-core:1.42.0")
 
     // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     implementation("com.mysql:mysql-connector-j:9.6.0")
@@ -60,11 +60,20 @@ dependencies {
     implementation("com.oracle.database.jdbc:ojdbc11:23.26.0.0.0")
 
     constraints {
+        implementation("org.apache.httpcomponents.client5:httpclient5:5.7-alpha1") {
+            because("GHSA-v3jc-474w-2wm6: Apache HttpComponents Core HPACK decoder header-list size vulnerability.")
+        }
         implementation("net.minidev:json-smart:2.5.2") {
             because("CVE-2024-57699: High-severity Denial of Service vulnerability via stack exhaustion.")
         }
         implementation("io.airlift:aircompressor:2.0.3") {
             because("CVE-2025-67721: High-severity Information Leak vulnerability in Snappy/LZ4 buffers.")
+        }
+        implementation("org.eclipse.packager:packager-core:0.21.0") {
+            because("GHSA-9pwp-9qqc-pr26: Bouncy Castle Name Constraints bypass via trailing dot in rfc822Name and URI. GHSA-cj8j-37rh-8475: Bouncy Castle Uncontrolled Resource Consumption vulnerability.")
+        }
+        implementation("org.apache.calcite.avatica:avatica-core:1.29.0") {
+            because("GHSA-hf6x-8p5f-cgmf: Apache HttpComponents Core HTTP/1 header parsing can cause memory-exhaustion denial of service")
         }
     }
 
