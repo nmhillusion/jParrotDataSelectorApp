@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("application")
     id("distribution")
-    id("org.owasp.dependencycheck") version "9.2.0"
+    id("org.owasp.dependencycheck") version "13.0.0"
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
@@ -37,13 +37,13 @@ dependencies {
     implementation("com.zaxxer:HikariCP:7.0.2")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-jdbc
-    implementation("org.springframework:spring-jdbc:6.2.14")
+    implementation("org.springframework:spring-jdbc:7.1.0-M2")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-orm
-    implementation("org.springframework:spring-orm:6.2.14")
+    implementation("org.springframework:spring-orm:7.1.0-M2")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-context
-    implementation("org.springframework:spring-context:6.2.14")
+    implementation("org.springframework:spring-context:7.1.0-M2")
 
     // https://mvnrepository.com/artifact/org.ehcache/ehcache
     implementation("org.ehcache:ehcache:3.11.1")
