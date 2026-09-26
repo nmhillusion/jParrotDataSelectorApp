@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("application")
     id("distribution")
-    id("org.owasp.dependencycheck") version "9.2.0"
+    id("org.owasp.dependencycheck") version "13.0.0"
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
@@ -52,6 +52,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.apache.calcite/calcite-core
     implementation("org.apache.calcite:calcite-core:1.41.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.3")
 
     // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     implementation("com.mysql:mysql-connector-j:9.6.0")
