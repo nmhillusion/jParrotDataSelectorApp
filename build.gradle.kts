@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("application")
     id("distribution")
-    id("org.owasp.dependencycheck") version "9.2.0"
+    id("org.owasp.dependencycheck") version "13.0.0"
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
@@ -51,7 +51,8 @@ dependencies {
     //// Mark: DATABASE DRIVERS ///////////////////
 
     // https://mvnrepository.com/artifact/org.apache.calcite/calcite-core
-    implementation("org.apache.calcite:calcite-core:1.41.0")
+    implementation("org.apache.calcite:calcite-core:1.42.0")
+    implementation("org.apache.calcite.avatica:avatica-core:1.29.0")
 
     // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     implementation("com.mysql:mysql-connector-j:9.6.0")
@@ -67,6 +68,8 @@ dependencies {
             because("CVE-2025-67721: High-severity Information Leak vulnerability in Snappy/LZ4 buffers.")
         }
     }
+
+    implementation("org.eclipse.packager:packager-core:0.21.0")
 
     // https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc
     implementation("com.microsoft.sqlserver:mssql-jdbc:13.2.1.jre11")
