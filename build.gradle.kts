@@ -37,7 +37,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:7.0.2")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-jdbc
-    implementation("org.springframework:spring-jdbc:6.2.14")
+    implementation("org.springframework:spring-jdbc:7.1.0-M2")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-orm
     implementation("org.springframework:spring-orm:6.2.14")
