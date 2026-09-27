@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("application")
     id("distribution")
-    id("org.owasp.dependencycheck") version "9.2.0"
+    id("org.owasp.dependencycheck") version "13.0.0"
 }
 
 group = "tech.nmhillusion.jParrotDataSelectorApp"
