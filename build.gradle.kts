@@ -43,7 +43,7 @@ dependencies {
     implementation("org.springframework:spring-orm:6.2.14")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-context
-    implementation("org.springframework:spring-context:6.2.14")
+    implementation("org.springframework:spring-context:7.0.9")
 
     // https://mvnrepository.com/artifact/org.ehcache/ehcache
     implementation("org.ehcache:ehcache:3.11.1")
