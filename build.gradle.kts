@@ -40,7 +40,7 @@ dependencies {
     implementation("org.springframework:spring-jdbc:6.2.14")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-orm
-    implementation("org.springframework:spring-orm:6.2.14")
+    implementation("org.springframework:spring-orm:7.1.0-M2")
 
     // https://mvnrepository.com/artifact/org.springframework/spring-context
     implementation("org.springframework:spring-context:6.2.14")
@@ -51,7 +51,7 @@ dependencies {
     //// Mark: DATABASE DRIVERS ///////////////////
 
     // https://mvnrepository.com/artifact/org.apache.calcite/calcite-core
-    implementation("org.apache.calcite:calcite-core:1.41.0")
+    implementation("org.apache.calcite:calcite-core:1.42.0")
 
     // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     implementation("com.mysql:mysql-connector-j:9.6.0")
