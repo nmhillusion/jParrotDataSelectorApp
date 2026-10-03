@@ -66,6 +66,9 @@ dependencies {
         implementation("io.airlift:aircompressor:2.0.3") {
             because("CVE-2025-67721: High-severity Information Leak vulnerability in Snappy/LZ4 buffers.")
         }
+        implementation("org.apache.calcite.avatica:avatica-core:1.29.0") {
+            because("GHSA-hjcp-jmpx-g3qm: Apache HttpComponents Client Connection Leak on Content-Encoding Decode Error Leads to Pool Exhaustion DoS")
+        }
     }
 
     // https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc
