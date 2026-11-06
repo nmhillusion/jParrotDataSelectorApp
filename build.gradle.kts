@@ -76,7 +76,7 @@ dependencies {
     implementation("org.apache.poi:poi:5.5.1")
 
     // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml
-    implementation("org.apache.poi:poi-ooxml:5.5.1")
+    implementation("org.apache.poi:poi-ooxml:6.0.0")
 
     /// Mark: TEST /////////////////////
 
